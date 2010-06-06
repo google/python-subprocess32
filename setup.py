@@ -22,7 +22,7 @@ it should be much more reliable when used in threaded applications.""",
 
       maintainer='Gregory P. Smith',
       maintainer_email='greg at krypto dot org',
-      url='http://code.krypto.org/python/subprocess32/',
+      url='http://code.google.com/p/python-subprocess32/',
 
       ext_modules=[ext],
       py_modules=['subprocess32'],
