@@ -1243,18 +1243,26 @@ class Popen(object):
                     errread, errwrite)
 
 
+        if hasattr(os, 'closerange'):  # Introduced in 2.6
+            @staticmethod
+            def _closerange(fd_low, fd_high):
+                os.closerange(fd_low, fd_high)
+        else:
+            @staticmethod
+            def _closerange(fd_low, fd_high):
+                for fd in xrange(fd_low, fd_high):
+                    while True:
+                        try:
+                            os.close(fd)
+                        except (OSError, IOError), e:
+                            if e.errno == errno.EINTR:
+                                continue
+                            break
+
+
         def _close_fds(self, but):
-            if hasattr(os, 'closerange'):
-                os.closerange(3, but)
-                os.closerange(but + 1, MAXFD)
-            else:
-                for i in xrange(3, MAXFD):
-                    if i == but:
-                        continue
-                    try:
-                        os.close(i)
-                    except:
-                        pass
+            self._closerange(3, but)
+            self._closerange(but + 1, MAXFD)
 
 
         def _close_all_but_a_sorted_few_fds(self, fds_to_keep):
@@ -1262,10 +1270,10 @@ class Popen(object):
             start_fd = 3
             for fd in fds_to_keep:
                 if fd >= start_fd:
-                    os.closerange(start_fd, fd)
+                    self._closerange(start_fd, fd)
                     start_fd = fd + 1
             if start_fd <= MAXFD:
-                os.closerange(start_fd, MAXFD)
+                self._closerange(start_fd, MAXFD)
 
 
         def _execute_child(self, args, executable, preexec_fn, close_fds,
