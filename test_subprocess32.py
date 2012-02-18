@@ -52,8 +52,8 @@ class BaseTestCase(unittest.TestCase):
         self.assertFalse(subprocess._active, "subprocess._active not empty")
 
     if not hasattr(unittest.TestCase, 'assertIn'):
-        def assertIn(self, a, b):
-            self.assert_(a in b)
+        def assertIn(self, a, b, msg=None):
+            self.assert_((a in b), msg)
 
     def assertStderrEqual(self, stderr, expected, msg=None):
         # In a debug build, stuff like "[6580 refs]" is printed to stderr at
@@ -1040,6 +1040,38 @@ if not getattr(subprocess, '_has_poll', False):
         self.assertFalse(remaining_fds & open_fds,
                          "Some fds were left open")
         self.assertIn(1, remaining_fds, "Subprocess failed")
+
+    def test_pass_fds(self):
+        fd_status = support.findfile("fd_status.py", subdir="subprocessdata")
+
+        open_fds = set()
+
+        for x in range(5):
+            fds = os.pipe()
+            self.addCleanup(os.close, fds[0])
+            self.addCleanup(os.close, fds[1])
+            open_fds.update(fds)
+
+        for fd in open_fds:
+            p = subprocess.Popen([sys.executable, fd_status],
+                                 stdout=subprocess.PIPE, close_fds=True,
+                                 pass_fds=(fd, ))
+            output, ignored = p.communicate()
+
+            remaining_fds = set(map(int, output.split(b',')))
+            to_be_closed = open_fds - set((fd,))
+
+            self.assertIn(fd, remaining_fds, "fd to be passed not passed")
+            self.assertFalse(remaining_fds & to_be_closed,
+                             "fd to be closed passed")
+
+            # pass_fds overrides close_fds with a warning.
+            if sys.version_info >= (2,7):  # assertWarns only in 2.7
+                with self.assertWarns(RuntimeWarning) as context:
+                    self.assertFalse(subprocess.call(
+                            [sys.executable, "-c", "import sys; sys.exit(0)"],
+                            close_fds=False, pass_fds=(fd, )))
+                self.assertIn('overriding close_fds', str(context.warning))
 
 
 #@unittest.skipUnless(getattr(subprocess, '_posixsubprocess', False),
