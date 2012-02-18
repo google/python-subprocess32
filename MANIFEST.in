@@ -1,0 +1,12 @@
+include *.txt
+include LICENSE*
+include setup.py
+include setup.cfg
+include ChangeLog
+include MANIFEST.in
+
+include Modules *.c *.h *.py
+
+prune build
+prune dist
+prune .hg*
