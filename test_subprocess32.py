@@ -1556,7 +1556,8 @@ class ContextManagerTests(ProcessTestCase):
                                   stderr=subprocess.PIPE) as proc:
                 pass
         except EnvironmentError, exception:
-            if exception.errno != errno.ENOENT:  # ignore "no such file"
+            # ignore errors that indicate the command was not found
+            if c.exception.errno not in (errno.ENOENT, errno.EACCES):
                 raise
         else:
             self.fail("Expected an EnvironmentError exception.")
