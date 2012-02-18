@@ -1184,6 +1184,9 @@ class POSIXProcessTestCase(BaseTestCase):
         self.assertTrue(readfiles, "The child hung")
         self.assertEqual(p2.stdout.read(), data)
 
+        p1.stdout.close()
+        p2.stdout.close()
+
     def test_close_fds(self):
         fd_status = test_support.findfile("testdata/fd_status.py")
 
