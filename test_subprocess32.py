@@ -59,9 +59,9 @@ class BaseTestCase(unittest.TestCase):
 
     if not hasattr(unittest.TestCase, 'assertIn'):
         def assertIn(self, a, b, msg=None):
-            self.assert_((a in b), msg)
+            self.assert_((a in b), msg or ('%r not in %r' % (a, b)))
         def assertNotIn(self, a, b, msg=None):
-            self.assert_((a not in b), msg)
+            self.assert_((a not in b), msg or ('%r in %r' % (a, b)))
 
     def _addCleanup(self, function, *args, **kwargs):
         """Add a function, with arguments, to be called when the test is
@@ -378,14 +378,17 @@ class ProcessTestCase(BaseTestCase):
             p.__exit__(None, None, None)
 
     def test_empty_env(self):
-        p = subprocess.Popen([sys.executable, "-c",
-                               'import os; '
-                               'print(len(os.environ))'],
-                              stdout=subprocess.PIPE,
-                              env={})
+        # Note: This excludes some __CF_* and VERSIONER_* keys OS X insists
+        # on adding even when the environment in exec is empty.
+        p = subprocess.Popen(
+                [sys.executable, "-c",
+                 'import os; '
+                 'print([k for k in os.environ.keys() '
+                 '       if ("VERSIONER" not in k and "__CF" not in k)])'],
+                stdout=subprocess.PIPE, env={})
         try:
             stdout, stderr = p.communicate()
-            self.assertEqual(stdout.strip(), "0")
+            self.assertEqual(stdout.strip(), "[]")
         finally:
             p.__exit__(None, None, None)
 
