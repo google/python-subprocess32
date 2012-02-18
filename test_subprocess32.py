@@ -1220,8 +1220,8 @@ class POSIXProcessTestCase(BaseTestCase):
                               'sys.stdout.write("apple")'],
                              stdout=subprocess.PIPE,
                              bufsize=0)
-        self.addCleanup(f.close)
         f = p.stdout
+        self.addCleanup(f.close)
         try:
             self.assertEqual(f.read(4), "appl")
             self.assertIn(f, select.select([f], [], [], 0.0)[0])
