@@ -2,10 +2,10 @@
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
 #ifndef HAVE_PIPE2
-#define HAVE_PIPE2 1  /* From 3.2's configure script, undef if you don't. */
+# define HAVE_PIPE2 1  /* From 3.2's configure script, undef if you don't. */
 #endif
-#ifdef HAVE_PIPE2
-#define _GNU_SOURCE
+#if defined(HAVE_PIPE2) && !defined(_GNU_SOURCE)
+# define _GNU_SOURCE
 #endif
 #include <unistd.h>
 #include <fcntl.h>
