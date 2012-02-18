@@ -5,6 +5,8 @@
 
 #include "_posixsubprocess_helpers.c"
 
+#define HAVE_PIPE2 1  /* From 3.2's configure script, undef if you don't. */
+
 #if (PY_VERSION_HEX < 0x02060000)
 /* These are not public API fuctions until 2.6. */
 static void _PyImport_AcquireLock(void);
