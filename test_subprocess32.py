@@ -364,12 +364,22 @@ class ProcessTestCase(BaseTestCase):
     def test_env(self):
         newenv = os.environ.copy()
         newenv["FRUIT"] = "orange"
-        p = subprocess.Popen([sys.executable, "-c",
-                          'import sys,os;'
-                          'sys.stdout.write(os.getenv("FRUIT"))'],
-                         stdout=subprocess.PIPE,
-                         env=newenv)
-        self.assertEqual(p.stdout.read(), "orange")
+        with subprocess.Popen([sys.executable, "-c",
+                               'import sys,os;'
+                               'sys.stdout.write(os.getenv("FRUIT"))'],
+                              stdout=subprocess.PIPE,
+                              env=newenv) as p:
+            stdout, stderr = p.communicate()
+            self.assertEqual(stdout, "orange")
+
+    def test_empty_env(self):
+        with subprocess.Popen([sys.executable, "-c",
+                               'import os; '
+                               'print(len(os.environ))'],
+                              stdout=subprocess.PIPE,
+                              env={}) as p:
+            stdout, stderr = p.communicate()
+            self.assertEqual(stdout.strip(), "0")
 
     def test_communicate_stdin(self):
         p = subprocess.Popen([sys.executable, "-c",
@@ -1108,7 +1118,7 @@ class POSIXProcessTestCase(BaseTestCase):
                              bufsize=0)
         f = p.stdout
         try:
-            self.assertEqual(f.read(4), b"appl")
+            self.assertEqual(f.read(4), "appl")
             self.assertIn(f, select.select([f], [], [], 0.0)[0])
         finally:
             p.wait()
