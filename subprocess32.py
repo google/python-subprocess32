@@ -1039,20 +1039,21 @@ class Popen(object):
 
             # Start the process
             try:
-                hp, ht, pid, tid = _subprocess.CreateProcess(executable, args,
-                                         # no special security
-                                         None, None,
-                                         int(not close_fds),
-                                         creationflags,
-                                         env,
-                                         cwd,
-                                         startupinfo)
-            except pywintypes.error, e:
-                # Translate pywintypes.error to WindowsError, which is
-                # a subclass of OSError.  FIXME: We should really
-                # translate errno using _sys_errlist (or similar), but
-                # how can this be done from Python?
-                raise WindowsError(*e.args)
+                try:
+                    hp, ht, pid, tid = _subprocess.CreateProcess(executable, args,
+                                             # no special security
+                                             None, None,
+                                             int(not close_fds),
+                                             creationflags,
+                                             env,
+                                             cwd,
+                                             startupinfo)
+                except pywintypes.error, e:
+                    # Translate pywintypes.error to WindowsError, which is
+                    # a subclass of OSError.  FIXME: We should really
+                    # translate errno using _sys_errlist (or similar), but
+                    # how can this be done from Python?
+                    raise WindowsError(*e.args)
             finally:
                 # Child is launched. Close the parent's copy of those pipe
                 # handles that only the child should have open.  You need

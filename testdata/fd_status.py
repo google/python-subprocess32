@@ -14,7 +14,7 @@ def isopen(fd):
     """Return True if the fd is open, and False otherwise"""
     try:
         fcntl.fcntl(fd, fcntl.F_GETFD, 0)
-    except IOError as e:
+    except IOError, e:
         if e.errno == errno.EBADF:
             return False
         raise
