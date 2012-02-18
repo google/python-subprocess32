@@ -1212,6 +1212,24 @@ class POSIXProcessTestCase(BaseTestCase):
                             close_fds=False, pass_fds=(fd, )))
                 self.assertIn('overriding close_fds', str(context.warning))
 
+    def test_stdout_stdin_are_single_inout_fd(self):
+        with open(os.devnull, "r+") as inout:
+            p = subprocess.Popen([sys.executable, "-c", "import sys; sys.exit(0)"],
+                                 stdout=inout, stdin=inout)
+            p.wait()
+
+    def test_stdout_stderr_are_single_inout_fd(self):
+        with open(os.devnull, "r+") as inout:
+            p = subprocess.Popen([sys.executable, "-c", "import sys; sys.exit(0)"],
+                                 stdout=inout, stderr=inout)
+            p.wait()
+
+    def test_stderr_stdin_are_single_inout_fd(self):
+        with open(os.devnull, "r+") as inout:
+            p = subprocess.Popen([sys.executable, "-c", "import sys; sys.exit(0)"],
+                                 stderr=inout, stdin=inout)
+            p.wait()
+
     def test_select_unbuffered(self):
         # Issue #11459: bufsize=0 should really set the pipes as
         # unbuffered (and therefore let select() work properly).
