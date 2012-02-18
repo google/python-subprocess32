@@ -674,6 +674,22 @@ class ProcessTestCase(BaseTestCase):
         output = subprocess.check_output([sys.executable, '-c', code])
         self.assert_(output.startswith('Hello World!'), output)
 
+    def test_communicate_eintr(self):
+        # Issue #12493: communicate() should handle EINTR
+        def handler(signum, frame):
+            pass
+        old_handler = signal.signal(signal.SIGALRM, handler)
+        self.addCleanup(signal.signal, signal.SIGALRM, old_handler)
+
+        # the process is running for 2 seconds
+        args = [sys.executable, "-c", 'import time; time.sleep(2)']
+        for stream in ('stdout', 'stderr'):
+            kw = {stream: subprocess.PIPE}
+            with subprocess.Popen(args, **kw) as process:
+                signal.alarm(1)
+                # communicate() will be interrupted by SIGALRM
+                process.communicate()
+
 
 # context manager
 class _SuppressCoreFiles(object):
