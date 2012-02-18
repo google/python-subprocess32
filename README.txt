@@ -8,4 +8,7 @@ the reliability when an application is using threads.
 Refer to the Python 3.2 documentation for usage information:
  http://docs.python.org/3.2/library/subprocess.html
 
--- Gregory P. Smith
+Bugs?  Try to reproduce them on the latest Python 3.2.x itself and file bug
+reports on http://bugs.python.org/.
+
+-- Gregory P. Smith  greg@krypto.org

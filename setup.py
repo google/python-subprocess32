@@ -12,7 +12,7 @@ def main():
 
     setup(
       name='subprocess32',
-      version='3.2.0',
+      version='3.2.3b1',
       description='Backport of the subprocess module from Python 3.2 for use on 2.x.',
       long_description="""
 This is a backport of the subprocess standard library module from
@@ -22,7 +22,7 @@ be much more reliable when used in threaded applications.""",
       license='PSF license',
 
       maintainer='Gregory P. Smith',
-      maintainer_email='greg at krypto dot org',
+      maintainer_email='greg@krypto.org',
       url='http://code.google.com/p/python-subprocess32/',
 
       ext_modules=[ext],
