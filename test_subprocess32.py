@@ -1098,6 +1098,21 @@ class POSIXProcessTestCase(BaseTestCase):
                             close_fds=False, pass_fds=(fd, )))
                 self.assertIn('overriding close_fds', str(context.warning))
 
+    def test_select_unbuffered(self):
+        # Issue #11459: bufsize=0 should really set the pipes as
+        # unbuffered (and therefore let select() work properly).
+        p = subprocess.Popen([sys.executable, "-c",
+                              'import sys;'
+                              'sys.stdout.write("apple")'],
+                             stdout=subprocess.PIPE,
+                             bufsize=0)
+        f = p.stdout
+        try:
+            self.assertEqual(f.read(4), b"appl")
+            self.assertIn(f, select.select([f], [], [], 0.0)[0])
+        finally:
+            p.wait()
+
 
 if mswindows:
     class POSIXProcessTestCase(unittest.TestCase): pass
