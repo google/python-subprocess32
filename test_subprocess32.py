@@ -1071,6 +1071,54 @@ class POSIXProcessTestCase(BaseTestCase):
         self.check_swap_fds(2, 0, 1)
         self.check_swap_fds(2, 1, 0)
 
+    def test_remapping_std_fds(self):
+        # open up some temporary files
+        temps = [mkstemp() for i in range(3)]
+        try:
+            temp_fds = [fd for fd, fname in temps]
+
+            # unlink the files -- we won't need to reopen them
+            for fd, fname in temps:
+                os.unlink(fname)
+
+            # write some data to what will become stdin, and rewind
+            os.write(temp_fds[1], "STDIN")
+            os.lseek(temp_fds[1], 0, 0)
+
+            # move the standard file descriptors out of the way
+            saved_fds = [os.dup(fd) for fd in range(3)]
+            try:
+                # duplicate the file objects over the standard fd's
+                for fd, temp_fd in enumerate(temp_fds):
+                    os.dup2(temp_fd, fd)
+
+                # now use those files in the "wrong" order, so that subprocess
+                # has to rearrange them in the child
+                p = subprocess.Popen([sys.executable, "-c",
+                    'import sys; got = sys.stdin.read();'
+                    'sys.stdout.write("got %s"%got); sys.stderr.write("err")'],
+                    stdin=temp_fds[1],
+                    stdout=temp_fds[2],
+                    stderr=temp_fds[0])
+                p.wait()
+            finally:
+                # restore the original fd's underneath sys.stdin, etc.
+                for std, saved in enumerate(saved_fds):
+                    os.dup2(saved, std)
+                    os.close(saved)
+
+            for fd in temp_fds:
+                os.lseek(fd, 0, 0)
+
+            out = os.read(temp_fds[2], 1024)
+            err = os.read(temp_fds[0], 1024)
+            self.assertEqual(out, "got STDIN")
+            self.assertEqual(err, "err")
+
+        finally:
+            for fd in temp_fds:
+                os.close(fd)
+
     # NOTE: test_surrogates_error_message makes no sense on python 2.x. omitted.
     # NOTE: test_undecodable_env makes no sense on python 2.x. omitted.
     # NOTE: test_bytes_program makes no sense on python 2.x. omitted.
@@ -1174,7 +1222,7 @@ class POSIXProcessTestCase(BaseTestCase):
                              stdout=subprocess.PIPE, close_fds=True,
                              pass_fds=())
         output, ignored = p.communicate()
-        remaining_fds = set(map(int, output.split(b',')))
+        remaining_fds = set(map(int, output.split(',')))
 
         self.assertFalse(remaining_fds & fds_to_keep & open_fds,
                          "Some fds not in pass_fds were left open")
@@ -1557,7 +1605,7 @@ class ContextManagerTests(ProcessTestCase):
                 pass
         except EnvironmentError, exception:
             # ignore errors that indicate the command was not found
-            if c.exception.errno not in (errno.ENOENT, errno.EACCES):
+            if exception.errno not in (errno.ENOENT, errno.EACCES):
                 raise
         else:
             self.fail("Expected an EnvironmentError exception.")
