@@ -814,6 +814,8 @@ class Popen(object):
             self.stderr.close()
         if self.stdin:
             self.stdin.close()
+        # Wait for the process to terminate, to avoid zombies.
+        self.wait()
 
     def _translate_newlines(self, data):
         data = data.replace("\r\n", "\n")
