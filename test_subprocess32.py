@@ -1278,7 +1278,7 @@ class POSIXProcessTestCase(BaseTestCase):
                                  stdout=inout, stdin=inout)
             p.wait()
         finally:
-            inout.__exit__(None, None, None)
+            inout.close()
 
     def test_stdout_stderr_are_single_inout_fd(self):
         inout = open(os.devnull, "r+")
@@ -1287,7 +1287,7 @@ class POSIXProcessTestCase(BaseTestCase):
                                  stdout=inout, stderr=inout)
             p.wait()
         finally:
-            inout.__exit__(None, None, None)
+            inout.close()
 
     def test_stderr_stdin_are_single_inout_fd(self):
         inout = open(os.devnull, "r+")
@@ -1296,7 +1296,7 @@ class POSIXProcessTestCase(BaseTestCase):
                                  stderr=inout, stdin=inout)
             p.wait()
         finally:
-            inout.__exit__(None, None, None)
+            inout.close()
 
     def test_wait_when_sigchild_ignored(self):
         # NOTE: sigchild_ignore.py may not be an effective test on all OSes.
