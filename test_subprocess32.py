@@ -82,7 +82,7 @@ class BaseTestCase(unittest.TestCase):
                 function(*args, **kwargs)
             except KeyboardInterrupt:
                 raise
-            finally:
+            except:
                 pass
 
     _use_our_own_cleanup_implementation = False
@@ -1220,6 +1220,7 @@ class POSIXProcessTestCase(BaseTestCase):
                               'sys.stdout.write("apple")'],
                              stdout=subprocess.PIPE,
                              bufsize=0)
+        self.addCleanup(f.close)
         f = p.stdout
         try:
             self.assertEqual(f.read(4), "appl")
