@@ -732,6 +732,16 @@ class Popen(object):
             else:
                 self.stderr = os.fdopen(errread, 'rb', bufsize)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        if self.stdout:
+            self.stdout.close()
+        if self.stderr:
+            self.stderr.close()
+        if self.stdin:
+            self.stdin.close()
 
     def _translate_newlines(self, data):
         data = data.replace("\r\n", "\n")
