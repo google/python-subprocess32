@@ -168,7 +168,7 @@ class ProcessTestCase(BaseTestCase):
                      "while True: pass"],
                     timeout=0.5)
         except subprocess.TimeoutExpired, exception:
-            self.assertEqual(exception.output, b'BDFL')
+            self.assertEqual(exception.output, 'BDFL')
         else:
             self.fail("Expected TimeoutExpired.")
 
@@ -418,13 +418,13 @@ class ProcessTestCase(BaseTestCase):
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
-        self.assertRaises(subprocess.TimeoutExpired, p.communicate, "banana",
+        self.assertRaises(subprocess.TimeoutExpired, p.communicate, u"banana",
                           timeout=0.3)
         # Make sure we can keep waiting for it, and that we get the whole output
         # after it completes.
         (stdout, stderr) = p.communicate()
         self.assertEqual(stdout, "banana")
-        self.assertStderrEqual(stderr.encode(), b"pineapple\npear\n")
+        self.assertStderrEqual(stderr.encode(), "pineapple\npear\n")
 
     def test_communicate_timeout_large_ouput(self):
         # Test a expring timeout while the child is outputting lots of data.
@@ -955,7 +955,7 @@ class POSIXProcessTestCase(BaseTestCase):
                        stdout=subprocess.PIPE,
                        stderr=subprocess.PIPE).communicate()
             #err = test_support.strip_python_stderr(err)
-            self.assertEqual((out, err), (b'apple', b'orange'))
+            self.assertEqual((out, err), ('apple', 'orange'))
         finally:
             for b, a in zip(newfds, fds):
                 os.dup2(b, a)
@@ -997,13 +997,13 @@ class POSIXProcessTestCase(BaseTestCase):
                               stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, close_fds=False)
 
-        self.addCleanup(p1.communicate, b'')
+        self.addCleanup(p1.communicate, '')
 
         p2 = subprocess.Popen([sys.executable, fd_status],
                               stdout=subprocess.PIPE, close_fds=False)
 
         output, error = p2.communicate()
-        result_fds = set(map(int, output.split(b',')))
+        result_fds = set(map(int, output.split(',')))
         unwanted_fds = set([p1.stdin.fileno(), p1.stdout.fileno(),
                             p1.stderr.fileno()])
 
@@ -1016,8 +1016,8 @@ class POSIXProcessTestCase(BaseTestCase):
         qcat = test_support.findfile("testdata/qcat.py")
         qgrep = test_support.findfile("testdata/qgrep.py")
 
-        subdata = b'zxcvbn'
-        data = subdata * 4 + b'\n'
+        subdata = 'zxcvbn'
+        data = subdata * 4 + '\n'
 
         p1 = subprocess.Popen([sys.executable, qcat],
                               stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -1052,7 +1052,7 @@ class POSIXProcessTestCase(BaseTestCase):
         p = subprocess.Popen([sys.executable, fd_status],
                              stdout=subprocess.PIPE, close_fds=False)
         output, ignored = p.communicate()
-        remaining_fds = set(map(int, output.split(b',')))
+        remaining_fds = set(map(int, output.split(',')))
 
         self.assertEqual(remaining_fds & open_fds, open_fds,
                          "Some fds were closed")
@@ -1060,7 +1060,7 @@ class POSIXProcessTestCase(BaseTestCase):
         p = subprocess.Popen([sys.executable, fd_status],
                              stdout=subprocess.PIPE, close_fds=True)
         output, ignored = p.communicate()
-        remaining_fds = set(map(int, output.split(b',')))
+        remaining_fds = set(map(int, output.split(',')))
 
         self.assertFalse(remaining_fds & open_fds,
                          "Some fds were left open")
@@ -1083,7 +1083,7 @@ class POSIXProcessTestCase(BaseTestCase):
                                  pass_fds=(fd, ))
             output, ignored = p.communicate()
 
-            remaining_fds = set(map(int, output.split(b',')))
+            remaining_fds = set(map(int, output.split(',')))
             to_be_closed = open_fds - set((fd,))
 
             self.assertIn(fd, remaining_fds, "fd to be passed not passed")
@@ -1326,8 +1326,8 @@ class ContextManagerTests(ProcessTestCase):
                                "sys.stderr.write('stderr');"],
                               stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE) as proc:
-            self.assertEqual(proc.stdout.read(), b"stdout")
-            self.assertStderrEqual(proc.stderr.read(), b"stderr")
+            self.assertEqual(proc.stdout.read(), "stdout")
+            self.assertStderrEqual(proc.stderr.read(), "stderr")
 
         self.assertTrue(proc.stdout.closed)
         self.assertTrue(proc.stderr.closed)
@@ -1343,7 +1343,7 @@ class ContextManagerTests(ProcessTestCase):
                               "import sys;"
                               "sys.exit(sys.stdin.read() == 'context')"],
                              stdin=subprocess.PIPE) as proc:
-            proc.communicate(b"context")
+            proc.communicate("context")
             self.assertEqual(proc.returncode, 1)
 
     def test_invalid_args(self):
