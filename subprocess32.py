@@ -1026,6 +1026,7 @@ class Popen(object):
 
         def _readerthread(self, fh, buffer):
             buffer.append(fh.read())
+            fh.close()
 
 
         def _communicate(self, input):
