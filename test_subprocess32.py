@@ -44,16 +44,49 @@ class BaseTestCase(unittest.TestCase):
         # Try to minimize the number of children we have so this test
         # doesn't crash on some buildbots (Alphas in particular).
         reap_children()
+        if not hasattr(unittest.TestCase, 'addCleanup'):
+            self._cleanups = []
 
     def tearDown(self):
-        for inst in subprocess._active:
-            inst.wait()
-        subprocess._cleanup()
-        self.assertFalse(subprocess._active, "subprocess._active not empty")
+        try:
+            for inst in subprocess._active:
+                inst.wait()
+            subprocess._cleanup()
+            self.assertFalse(subprocess._active, "subprocess._active not empty")
+        finally:
+            if self._use_our_own_cleanup_implementation:
+                self._doCleanups()
 
     if not hasattr(unittest.TestCase, 'assertIn'):
         def assertIn(self, a, b, msg=None):
             self.assert_((a in b), msg)
+
+    def _addCleanup(self, function, *args, **kwargs):
+        """Add a function, with arguments, to be called when the test is
+        completed. Functions added are called on a LIFO basis and are
+        called after tearDown on test failure or success.
+
+        Unlike unittest2 or python 2.7, cleanups are not if setUp fails.
+        That is easier to implement in this subclass and is all we need.
+        """
+        self._cleanups.append((function, args, kwargs))
+
+    def _doCleanups(self):
+        """Execute all cleanup functions. Normally called for you after
+        tearDown."""
+        while self._cleanups:
+            function, args, kwargs = self._cleanups.pop()
+            try:
+                function(*args, **kwargs)
+            except KeyboardInterrupt:
+                raise
+            finally:
+                pass
+
+    _use_our_own_cleanup_implementation = False
+    if not hasattr(unittest.TestCase, 'addCleanup'):
+        _use_our_own_cleanup_implementation = True
+        addCleanup = _addCleanup
 
     def assertStderrEqual(self, stderr, expected, msg=None):
         # In a debug build, stuff like "[6580 refs]" is printed to stderr at
@@ -833,7 +866,117 @@ class POSIXProcessTestCase(BaseTestCase):
         self.assertEqual(p.wait(), -signal.SIGTERM)
 
     # NOTE: test_surrogates_error_message makes no sense on python 2.x. omitted.
-    # NOTE: test_undecodabe_env makes no sense on python 2.x. omitted.
+    # NOTE: test_undecodable_env makes no sense on python 2.x. omitted.
+    # NOTE: test_bytes_program makes no sense on python 2.x. omitted.
+
+    def test_pipe_cloexec(self):
+        sleeper = test_support.findfile("testdata/input_reader.py")
+        fd_status = test_support.findfile("testdata/fd_status.py")
+
+        p1 = subprocess.Popen([sys.executable, sleeper],
+                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE, close_fds=False)
+
+        self.addCleanup(p1.communicate, b'')
+
+        p2 = subprocess.Popen([sys.executable, fd_status],
+                              stdout=subprocess.PIPE, close_fds=False)
+
+        output, error = p2.communicate()
+        result_fds = set(map(int, output.split(b',')))
+        unwanted_fds = set([p1.stdin.fileno(), p1.stdout.fileno(),
+                            p1.stderr.fileno()])
+
+        self.assertFalse(result_fds & unwanted_fds,
+                         "Expected no fds from %r to be open in child, "
+                         "found %r" %
+                              (unwanted_fds, result_fds & unwanted_fds))
+
+    def test_pipe_cloexec_real_tools(self):
+        qcat = test_support.findfile("testdata/qcat.py")
+        qgrep = test_support.findfile("testdata/qgrep.py")
+
+        subdata = b'zxcvbn'
+        data = subdata * 4 + b'\n'
+
+        p1 = subprocess.Popen([sys.executable, qcat],
+                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                              close_fds=False)
+
+        p2 = subprocess.Popen([sys.executable, qgrep, subdata],
+                              stdin=p1.stdout, stdout=subprocess.PIPE,
+                              close_fds=False)
+
+        self.addCleanup(p1.wait)
+        self.addCleanup(p2.wait)
+        self.addCleanup(p1.terminate)
+        self.addCleanup(p2.terminate)
+
+        p1.stdin.write(data)
+        p1.stdin.close()
+
+        readfiles, ignored1, ignored2 = select.select([p2.stdout], [], [], 10)
+
+        self.assertTrue(readfiles, "The child hung")
+        self.assertEqual(p2.stdout.read(), data)
+
+    def test_close_fds(self):
+        fd_status = test_support.findfile("testdata/fd_status.py")
+
+        fds = os.pipe()
+        self.addCleanup(os.close, fds[0])
+        self.addCleanup(os.close, fds[1])
+
+        open_fds = set(fds)
+
+        p = subprocess.Popen([sys.executable, fd_status],
+                             stdout=subprocess.PIPE, close_fds=False)
+        output, ignored = p.communicate()
+        remaining_fds = set(map(int, output.split(b',')))
+
+        self.assertEqual(remaining_fds & open_fds, open_fds,
+                         "Some fds were closed")
+
+        p = subprocess.Popen([sys.executable, fd_status],
+                             stdout=subprocess.PIPE, close_fds=True)
+        output, ignored = p.communicate()
+        remaining_fds = set(map(int, output.split(b',')))
+
+        self.assertFalse(remaining_fds & open_fds,
+                         "Some fds were left open")
+        self.assertIn(1, remaining_fds, "Subprocess failed")
+
+    def test_pass_fds(self):
+        fd_status = test_support.findfile("testdata/fd_status.py")
+
+        open_fds = set()
+
+        for x in range(5):
+            fds = os.pipe()
+            self.addCleanup(os.close, fds[0])
+            self.addCleanup(os.close, fds[1])
+            open_fds.update(fds)
+
+        for fd in open_fds:
+            p = subprocess.Popen([sys.executable, fd_status],
+                                 stdout=subprocess.PIPE, close_fds=True,
+                                 pass_fds=(fd, ))
+            output, ignored = p.communicate()
+
+            remaining_fds = set(map(int, output.split(b',')))
+            to_be_closed = open_fds - set((fd,))
+
+            self.assertIn(fd, remaining_fds, "fd to be passed not passed")
+            self.assertFalse(remaining_fds & to_be_closed,
+                             "fd to be closed passed")
+
+            # pass_fds overrides close_fds with a warning.
+            if sys.version_info >= (2,7):  # assertWarns only in 2.7
+                with self.assertWarns(RuntimeWarning) as context:
+                    self.assertFalse(subprocess.call(
+                            [sys.executable, "-c", "import sys; sys.exit(0)"],
+                            close_fds=False, pass_fds=(fd, )))
+                self.assertIn('overriding close_fds', str(context.warning))
 
 
 if mswindows:
@@ -963,115 +1106,6 @@ class ProcessTestCaseNoPoll(ProcessTestCase):
 
 if not getattr(subprocess, '_has_poll', False):
     class ProcessTestCaseNoPoll(unittest.TestCase): pass
-
-    def test_pipe_cloexec(self):
-        sleeper = support.findfile("input_reader.py", subdir="subprocessdata")
-        fd_status = support.findfile("fd_status.py", subdir="subprocessdata")
-
-        p1 = subprocess.Popen([sys.executable, sleeper],
-                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE, close_fds=False)
-
-        self.addCleanup(p1.communicate, b'')
-
-        p2 = subprocess.Popen([sys.executable, fd_status],
-                              stdout=subprocess.PIPE, close_fds=False)
-
-        output, error = p2.communicate()
-        result_fds = set(map(int, output.split(b',')))
-        unwanted_fds = set([p1.stdin.fileno(), p1.stdout.fileno(),
-                            p1.stderr.fileno()])
-
-        self.assertFalse(result_fds & unwanted_fds,
-                         "Expected no fds from %r to be open in child, "
-                         "found %r" %
-                              (unwanted_fds, result_fds & unwanted_fds))
-
-    def test_pipe_cloexec_real_tools(self):
-        qcat = support.findfile("qcat.py", subdir="subprocessdata")
-        qgrep = support.findfile("qgrep.py", subdir="subprocessdata")
-
-        subdata = b'zxcvbn'
-        data = subdata * 4 + b'\n'
-
-        p1 = subprocess.Popen([sys.executable, qcat],
-                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                              close_fds=False)
-
-        p2 = subprocess.Popen([sys.executable, qgrep, subdata],
-                              stdin=p1.stdout, stdout=subprocess.PIPE,
-                              close_fds=False)
-
-        self.addCleanup(p1.wait)
-        self.addCleanup(p2.wait)
-        self.addCleanup(p1.terminate)
-        self.addCleanup(p2.terminate)
-
-        p1.stdin.write(data)
-        p1.stdin.close()
-
-        readfiles, ignored1, ignored2 = select.select([p2.stdout], [], [], 10)
-
-        self.assertTrue(readfiles, "The child hung")
-        self.assertEqual(p2.stdout.read(), data)
-
-    def test_close_fds(self):
-        fd_status = support.findfile("fd_status.py", subdir="subprocessdata")
-
-        fds = os.pipe()
-        self.addCleanup(os.close, fds[0])
-        self.addCleanup(os.close, fds[1])
-
-        open_fds = set(fds)
-
-        p = subprocess.Popen([sys.executable, fd_status],
-                             stdout=subprocess.PIPE, close_fds=False)
-        output, ignored = p.communicate()
-        remaining_fds = set(map(int, output.split(b',')))
-
-        self.assertEqual(remaining_fds & open_fds, open_fds,
-                         "Some fds were closed")
-
-        p = subprocess.Popen([sys.executable, fd_status],
-                             stdout=subprocess.PIPE, close_fds=True)
-        output, ignored = p.communicate()
-        remaining_fds = set(map(int, output.split(b',')))
-
-        self.assertFalse(remaining_fds & open_fds,
-                         "Some fds were left open")
-        self.assertIn(1, remaining_fds, "Subprocess failed")
-
-    def test_pass_fds(self):
-        fd_status = support.findfile("fd_status.py", subdir="subprocessdata")
-
-        open_fds = set()
-
-        for x in range(5):
-            fds = os.pipe()
-            self.addCleanup(os.close, fds[0])
-            self.addCleanup(os.close, fds[1])
-            open_fds.update(fds)
-
-        for fd in open_fds:
-            p = subprocess.Popen([sys.executable, fd_status],
-                                 stdout=subprocess.PIPE, close_fds=True,
-                                 pass_fds=(fd, ))
-            output, ignored = p.communicate()
-
-            remaining_fds = set(map(int, output.split(b',')))
-            to_be_closed = open_fds - set((fd,))
-
-            self.assertIn(fd, remaining_fds, "fd to be passed not passed")
-            self.assertFalse(remaining_fds & to_be_closed,
-                             "fd to be closed passed")
-
-            # pass_fds overrides close_fds with a warning.
-            if sys.version_info >= (2,7):  # assertWarns only in 2.7
-                with self.assertWarns(RuntimeWarning) as context:
-                    self.assertFalse(subprocess.call(
-                            [sys.executable, "-c", "import sys; sys.exit(0)"],
-                            close_fds=False, pass_fds=(fd, )))
-                self.assertIn('overriding close_fds', str(context.warning))
 
 
 #@unittest.skipUnless(getattr(subprocess, '_posixsubprocess', False),
