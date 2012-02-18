@@ -1278,6 +1278,15 @@ class POSIXProcessTestCase(BaseTestCase):
                                  stderr=inout, stdin=inout)
             p.wait()
 
+    def test_wait_when_sigchild_ignored(self):
+        # NOTE: sigchild_ignore.py may not be an effective test on all OSes.
+        sigchild_ignore = test_support.findfile("testdata/sigchild_ignore.py")
+        p = subprocess.Popen([sys.executable, sigchild_ignore],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        self.assertEqual(0, p.returncode, "sigchild_ignore.py exited"
+                         " non-zero with this error:\n%s" % stderr)
+
     def test_select_unbuffered(self):
         # Issue #11459: bufsize=0 should really set the pipes as
         # unbuffered (and therefore let select() work properly).

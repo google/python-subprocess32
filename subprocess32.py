@@ -1474,7 +1474,11 @@ class Popen(object):
                 os.close(errpipe_read)
 
             if data != "":
-                _eintr_retry_call(os.waitpid, self.pid, 0)
+                try:
+                    _eintr_retry_call(os.waitpid, self.pid, 0)
+                except OSError, e:
+                    if e.errno != errno.ECHILD:
+                        raise
                 try:
                     exception_name, hex_errno, err_msg = data.split(':', 2)
                 except ValueError:
