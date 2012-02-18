@@ -1,7 +1,7 @@
 /* Authors: Gregory P. Smith & Jeffrey Yasskin */
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
-#ifndef HAVE_PIPE2
+#if defined(__linux__) && !defined(HAVE_PIPE2)
 # define HAVE_PIPE2 1  /* From 3.2's configure script, undef if you don't. */
 #endif
 #if defined(HAVE_PIPE2) && !defined(_GNU_SOURCE)
@@ -29,8 +29,8 @@
 
 #include "_posixsubprocess_helpers.c"
 
-#if (PY_VERSION_HEX < 0x02060000)
-/* These are not public API fuctions until 2.6. */
+#if (PY_VERSION_HEX < 0x02060300)
+/* These are not public API fuctions until 2.6.3. */
 static void _PyImport_AcquireLock(void);
 static int _PyImport_ReleaseLock(void);
 #endif
@@ -760,7 +760,7 @@ subprocess_cloexec_pipe(PyObject *self, PyObject *noargs)
 
 /* module level code ********************************************************/
 
-#if (PY_VERSION_HEX < 0x02060000)
+#if (PY_VERSION_HEX < 0x02060300)
 static PyObject* imp_module;
 
 static void
