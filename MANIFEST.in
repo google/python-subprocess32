@@ -5,7 +5,8 @@ include setup.cfg
 include ChangeLog
 include MANIFEST.in
 
-include Modules *.c *.h *.py
+include *.c *.h *.py
+include testdata/*
 
 prune build
 prune dist
