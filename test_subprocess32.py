@@ -1599,7 +1599,7 @@ def reap_children():
 
 
 
-class ContextManagerTests(ProcessTestCase):
+class ContextManagerTests(BaseTestCase):
 
     def test_pipe(self):
         proc = subprocess.Popen([sys.executable, "-c",

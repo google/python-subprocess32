@@ -2,8 +2,8 @@
 
 # This is for my own convenience, edit it for your own environment.
 
-PYTHON=../python/Python-2.4.6/python
+PYTHON=python
 $PYTHON setup.py build || exit 1
 
-export PYTHONPATH=./build/lib.linux-x86_64-2.4
+export PYTHONPATH=./build/lib.macosx-10.6-universal-2.6
 exec $PYTHON test_subprocess32.py
