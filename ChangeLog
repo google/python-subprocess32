@@ -1,0 +1,23 @@
+------------------
+2012-02-18 3.2.3b1
+------------------
+
+This release brings in the last year and a half's worth of bugfixes and
+improvements to Python 3.2's subprocess module:
+
+Off the top of my head, some major bugfix highlights include:
+ * Timeout support on the APIs.
+ * close_fds=True is now the default (as it is in 3.2) and performs much faster.
+ * Fixed EINTR handling.
+ * Fixed SIGCHLD handling.
+ * Fixed several race conditions.
+ * Many more bug fixes too numerous to list.
+
+You can grep out the full list of improvements related to subprocess in:
+ http://hg.python.org/cpython/file/9ce5d456138b/Misc/NEWS
+
+-------------
+2010-06 3.2.0
+-------------
+
+This was the first release. Roughly equivalent to Python 3.2.0a1.

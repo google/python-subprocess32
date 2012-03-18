@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# This is for my own convenience, edit it for your own environment.
+
+PYTHON=python
+$PYTHON setup.py build || exit 1
+
+export PYTHONPATH=./build/lib.macosx-10.6-universal-2.6
+exec $PYTHON test_subprocess32.py
