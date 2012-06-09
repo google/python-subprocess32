@@ -1312,7 +1312,7 @@ class Popen(object):
                             if isinstance(s, str):
                                 return s
                             else:
-                                return s.encode(fs_encoding, 'surrogateescape')
+                                return s.encode(fs_encoding, 'strict')
 
                         # We must avoid complex work that could involve
                         # malloc or free in the child process to avoid

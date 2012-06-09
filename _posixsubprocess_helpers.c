@@ -27,11 +27,11 @@ static PyObject *PyUnicode_EncodeFSDefault(PyObject *unicode)
     if (Py_FileSystemDefaultEncoding)
         return PyUnicode_AsEncodedString(unicode,
                                          Py_FileSystemDefaultEncoding,
-                                         "surrogateescape");
+                                         "strict");
     else
         return PyUnicode_EncodeUTF8(PyUnicode_AS_UNICODE(unicode),
-                                     PyUnicode_GET_SIZE(unicode),
-                                     "surrogateescape");
+                                    PyUnicode_GET_SIZE(unicode),
+                                    "strict");
 }
 
 

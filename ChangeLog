@@ -1,4 +1,14 @@
 ------------------
+2012-06-08 3.2.XXX
+------------------
+
+Fixes the references to the 'surrogateescape' unicode encoding error
+handler that does not exist in Python 2.x.  'strict' is used so that a
+UnicodeEncodeError exception is raised in these situations.  These MAY
+occur if your sys.getfilesystemencoding() is not UTF-8 and attempt to
+use a non-ascii executable, args or env values.
+
+------------------
 2012-02-18 3.2.3b1
 ------------------
 
