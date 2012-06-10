@@ -1,6 +1,6 @@
-------------------
-2012-06-08 3.2.XXX
-------------------
+----------------
+2012-06-10 3.2.3
+----------------
 
 * Fixes the references to the 'surrogateescape' unicode encoding error
   handler that does not exist in Python 2.x.  'strict' is used so that
