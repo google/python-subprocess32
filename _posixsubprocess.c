@@ -229,7 +229,7 @@ _close_open_fd_range_safe(int start_fd, int end_fd, PyObject* py_fds_to_keep)
 #ifdef O_CLOEXEC
     fd_dir_fd = open(FD_DIR, O_RDONLY | O_CLOEXEC, 0);
 #else
-    fd_dir_fd = open(FD_DIR, O_RDONLY | O_CLOEXEC, 0);
+    fd_dir_fd = open(FD_DIR, O_RDONLY, 0);
 #ifdef FD_CLOEXEC
     {
         int old = fcntl(fd_dir_fd, F_GETFD);

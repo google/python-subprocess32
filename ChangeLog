@@ -10,6 +10,7 @@
   this change, those would result in a hard to debug LookupError for
   surrogateescape.
 * Issue #15000: Support the "unique" x32 architecture in _posixsubprocess.c.
+* Fix a compilation problem when O_CLOEXEC is not defined.
 
 ------------------
 2012-02-18 3.2.3b1
