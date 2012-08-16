@@ -108,6 +108,8 @@ class BaseTestCase(unittest.TestCase):
         # shutdown time.  That frustrates tests trying to check stderr produced
         # from a spawned Python process.
         actual = strip_python_stderr(stderr)
+        # strip_python_stderr also strips whitespace, so we do too.
+        expected = expected.strip()
         self.assertEqual(actual, expected, msg)
 
 
