@@ -38,6 +38,19 @@ except AttributeError:
         fname = tempfile.mktemp()
         return os.open(fname, os.O_RDWR|os.O_CREAT), fname
 
+try:
+    strip_python_stderr = test_support.strip_python_stderr
+except AttributeError:
+    # Copied from the test.test_support module in 2.7.
+    def strip_python_stderr(stderr):
+        """Strip the stderr of a Python process from potential debug output
+        emitted by the interpreter.
+
+        This will typically be run on the result of the communicate() method
+        of a subprocess.Popen object.
+        """
+        stderr = re.sub(r"\[\d+ refs\]\r?\n?$", "", stderr).strip()
+        return stderr
 
 class BaseTestCase(unittest.TestCase):
     def setUp(self):
@@ -94,7 +107,7 @@ class BaseTestCase(unittest.TestCase):
         # In a debug build, stuff like "[6580 refs]" is printed to stderr at
         # shutdown time.  That frustrates tests trying to check stderr produced
         # from a spawned Python process.
-        actual = re.sub(r"\[\d+ refs\]\r?\n?$", "", stderr)
+        actual = strip_python_stderr(stderr)
         self.assertEqual(actual, expected, msg)
 
 
@@ -990,7 +1003,7 @@ class POSIXProcessTestCase(BaseTestCase):
                        stdin=stdin,
                        stdout=subprocess.PIPE,
                        stderr=subprocess.PIPE).communicate()
-            #err = test_support.strip_python_stderr(err)
+            err = strip_python_stderr(err)
             self.assertEqual((out, err), ('apple', 'orange'))
         finally:
             for b, a in zip(newfds, fds):
@@ -1062,7 +1075,7 @@ class POSIXProcessTestCase(BaseTestCase):
                     os.close(saved)
 
             self.assertEqual(out, "got STDIN")
-            self.assertEqual(err, "err")
+            self.assertStderrEqual(err, "err")
 
         finally:
             for fd in temp_fds:
@@ -1121,7 +1134,7 @@ class POSIXProcessTestCase(BaseTestCase):
             out = os.read(temp_fds[2], 1024)
             err = os.read(temp_fds[0], 1024)
             self.assertEqual(out, "got STDIN")
-            self.assertEqual(err, "err")
+            self.assertStderrEqual(err, "err")
 
         finally:
             for fd in temp_fds:
