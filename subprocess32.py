@@ -1297,6 +1297,7 @@ class Popen(object):
 
             if executable is None:
                 executable = args[0]
+            orig_executable = executable
 
             # For transferring possible exec failure from child to parent.
             # Data format: "exception name:hex errno:description"
@@ -1361,6 +1362,7 @@ class Popen(object):
                         self._child_created = True
                         if self.pid == 0:
                             # Child
+                            reached_preexec = False
                             try:
                                 # Close parent's pipe ends
                                 if p2cwrite != -1:
@@ -1429,6 +1431,7 @@ class Popen(object):
                                 if start_new_session and hasattr(os, 'setsid'):
                                     os.setsid()
 
+                                reached_preexec = True
                                 if preexec_fn:
                                     preexec_fn()
 
@@ -1444,6 +1447,8 @@ class Popen(object):
                                         errno_num = exc_value.errno
                                     else:
                                         errno_num = 0
+                                    if not reached_preexec:
+                                        exc_value = "noexec"
                                     message = '%s:%x:%s' % (exc_type.__name__,
                                                             errno_num, exc_value)
                                     os.write(errpipe_write, message)
@@ -1502,10 +1507,17 @@ class Popen(object):
                         os.close(fd)
                 if issubclass(child_exception_type, OSError) and hex_errno:
                     errno_num = int(hex_errno, 16)
+                    child_exec_never_called = (err_msg == "noexec")
+                    if child_exec_never_called:
+                        err_msg = ""
                     if errno_num != 0:
                         err_msg = os.strerror(errno_num)
                         if errno_num == errno.ENOENT:
-                            err_msg += ': ' + repr(args[0])
+                            if child_exec_never_called:
+                                # The error must be from chdir(cwd).
+                                err_msg += ': ' + repr(cwd)
+                            else:
+                                err_msg += ': ' + repr(orig_executable)
                     raise child_exception_type(errno_num, err_msg)
                 try:
                     exception = child_exception_type(err_msg)
