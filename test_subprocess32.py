@@ -265,6 +265,7 @@ class ProcessTestCase(BaseTestCase):
         temp_dir = self._normalize_cwd(temp_dir)
         self._assert_cwd(temp_dir, sys.executable, cwd=temp_dir)
 
+    #@unittest.skipIf(mswindows, "pending resolution of issue #15533")
     def test_cwd_with_relative_arg(self):
         # Check that Popen looks for args[0] relative to cwd if args[0]
         # is relative.
@@ -289,6 +290,7 @@ class ProcessTestCase(BaseTestCase):
             os.chdir(saved_dir)
             shutil.rmtree(path)
 
+    #@unittest.skipIf(mswindows, "pending resolution of issue #15533")
     def test_cwd_with_relative_executable(self):
         # Check that Popen looks for executable relative to cwd if executable
         # is relative (and that executable takes precedence over args[0]).
