@@ -778,7 +778,8 @@ subprocess_cloexec_pipe(PyObject *self, PyObject *noargs)
 
 /* module level code ********************************************************/
 
-#if (PY_VERSION_HEX < 0x02060300)
+#define MIN_PY_VERSION_WITH_PYIMPORT_ACQUIRELOCK 0x02060300
+#if (PY_VERSION_HEX < MIN_PY_VERSION_WITH_PYIMPORT_ACQUIRELOCK)
 static PyObject* imp_module;
 
 static void
@@ -830,7 +831,7 @@ init_posixsubprocess(void)
 #endif
         max_fd = 256;  /* Matches Lib/subprocess.py */
 
-#if (PY_VERSION_HEX < 0x02060000)
+#if (PY_VERSION_HEX < MIN_PY_VERSION_WITH_PYIMPORT_ACQUIRELOCK)
     imp_module = PyImport_ImportModule("imp");
     if (imp_module == NULL)
         return;
