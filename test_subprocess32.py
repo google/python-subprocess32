@@ -734,6 +734,34 @@ class ProcessTestCase(BaseTestCase):
             data = p.communicate("lime")[0]
             self.assertEqual(data, "lime")
 
+    def test_universal_newlines_communicate_stdin_stdout_stderr(self):
+        # universal newlines through communicate(), with stdin, stdout, stderr
+        p = subprocess.Popen([sys.executable, "-c",
+                              'import sys,os;' + SETBINARY + '''\nif True:
+                                  s = sys.stdin.readline()
+                                  sys.stdout.write(s)
+                                  sys.stdout.write("line2\\r")
+                                  sys.stderr.write("eline2\\n")
+                                  s = sys.stdin.read()
+                                  sys.stdout.write(s)
+                                  sys.stdout.write("line4\\n")
+                                  sys.stdout.write("line5\\r\\n")
+                                  sys.stderr.write("eline6\\r")
+                                  sys.stderr.write("eline7\\r\\nz")
+                              '''],
+                             stdin=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             universal_newlines=True)
+        self.addCleanup(p.stdout.close)
+        self.addCleanup(p.stderr.close)
+        (stdout, stderr) = p.communicate(u"line1\nline3\n")
+        self.assertEqual(p.returncode, 0)
+        self.assertEqual(u"line1\nline2\nline3\nline4\nline5\n", stdout)
+        # Python debug build push something like "[42442 refs]\n"
+        # to stderr at exit of subprocess.
+        # Don't use assertStderrEqual because it strips CR and LF from output.
+        self.assertTrue(stderr.startswith(u"eline2\neline6\neline7\n"))
 
     def test_list2cmdline(self):
         self.assertEqual(subprocess.list2cmdline(['a b c', 'd', 'e']),
