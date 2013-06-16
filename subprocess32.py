@@ -2,12 +2,10 @@
 #
 # For more information about this module, see PEP 324.
 #
-# This module should remain compatible with Python 2.2, see PEP 291.
-#
 # Copyright (c) 2003-2005 by Peter Astrand <astrand@lysator.liu.se>
 #
 # Licensed to PSF under a Contributor Agreement.
-# See http://www.python.org/2.4/license for licensing details.
+# See http://www.python.org/3.3/license for licensing details.
 
 r"""subprocess - Subprocesses with accessible I/O streams
 
