@@ -1,7 +1,9 @@
 -----------------
-2013-06-15 3.2.5b1
+2013-06-15 3.2.5b2
 -----------------
 
+* Fixes issue #16650 - Don't reference ECHILD from outside the local scope.
+* Unittests no longer spew any test data for human verification to stdout.
 * Remove a bare print to stdout that could have happened if the child process
   wrote garbage to its pre-exec error pipe.
 * Fixes issue #16327 - the subprocess module no longer leaks file descriptors
