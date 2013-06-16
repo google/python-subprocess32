@@ -779,14 +779,6 @@ class Popen(object):
          c2pread, c2pwrite,
          errread, errwrite) = self._get_handles(stdin, stdout, stderr)
 
-        self._execute_child(args, executable, preexec_fn, close_fds,
-                            pass_fds, cwd, env, universal_newlines,
-                            startupinfo, creationflags, shell,
-                            p2cread, p2cwrite,
-                            c2pread, c2pwrite,
-                            errread, errwrite,
-                            restore_signals, start_new_session)
-
         if mswindows:
             if p2cwrite != -1:
                 p2cwrite = msvcrt.open_osfhandle(p2cwrite.Detach(), 0)
@@ -807,6 +799,46 @@ class Popen(object):
                 self.stderr = os.fdopen(errread, 'rU', bufsize)
             else:
                 self.stderr = os.fdopen(errread, 'rb', bufsize)
+
+        self._closed_child_pipe_fds = False
+        exception_cleanup_needed = False
+        try:
+            self._execute_child(args, executable, preexec_fn, close_fds,
+                                pass_fds, cwd, env, universal_newlines,
+                                startupinfo, creationflags, shell,
+                                p2cread, p2cwrite,
+                                c2pread, c2pwrite,
+                                errread, errwrite,
+                                restore_signals, start_new_session)
+        except:
+            # The cleanup is performed within the finally block rather
+            # than simply within this except block before the raise so
+            # that any exceptions raised and handled within it do not
+            # clobber the exception context we want to propagate upwards.
+            # This is only necessary in Python 2.
+            exception_cleanup_needed = True
+            raise
+        finally:
+            if exception_cleanup_needed:
+                for f in filter(None, (self.stdin, self.stdout, self.stderr)):
+                    try:
+                        f.close()
+                    except EnvironmentError:
+                        pass  # Ignore EBADF or other errors
+
+                if not self._closed_child_pipe_fds:
+                    to_close = []
+                    if stdin == PIPE:
+                        to_close.append(p2cread)
+                    if stdout == PIPE:
+                        to_close.append(c2pwrite)
+                    if stderr == PIPE:
+                        to_close.append(errwrite)
+                    for fd in to_close:
+                        try:
+                            os.close(fd)
+                        except EnvironmentError:
+                            pass
 
     def __enter__(self):
         return self
@@ -1468,12 +1500,16 @@ class Popen(object):
                     # be sure the FD is closed no matter what
                     os.close(errpipe_write)
 
+                # A pair of non -1s means we created both fds and are
+                # responsible for closing them.
                 if p2cread != -1 and p2cwrite != -1:
                     os.close(p2cread)
                 if c2pwrite != -1 and c2pread != -1:
                     os.close(c2pwrite)
                 if errwrite != -1 and errread != -1:
                     os.close(errwrite)
+                # Prevent a double close of these fds from __init__ on error.
+                self._closed_child_pipe_fds = True
 
                 # Wait for exec to fail or succeed; possibly raising exception
                 # exception (limited in size)
@@ -1502,9 +1538,6 @@ class Popen(object):
                     err_msg = 'Unknown'
                 child_exception_type = getattr(
                         exceptions, exception_name, RuntimeError)
-                for fd in (p2cwrite, c2pread, errread):
-                    if fd != -1:
-                        os.close(fd)
                 if issubclass(child_exception_type, OSError) and hex_errno:
                     errno_num = int(hex_errno, 16)
                     child_exec_never_called = (err_msg == "noexec")
