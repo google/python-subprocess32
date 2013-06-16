@@ -834,8 +834,13 @@ class ProcessTestCase(BaseTestCase):
 
     def test_wait_timeout(self):
         p = subprocess.Popen([sys.executable,
-                              "-c", "import time; time.sleep(1)"])
-        self.assertRaises(subprocess.TimeoutExpired, p.wait, timeout=0.1)
+                              "-c", "import time; time.sleep(0.1)"])
+        try:
+            p.wait(timeout=0.01)
+        except subprocess.TimeoutExpired, e:
+            self.assertIn("0.01", str(e))  # For coverage of __str__.
+        else:
+            self.fail("subprocess.TimeoutExpired expected but not raised.")
         self.assertEqual(p.wait(timeout=2), 0)
 
 

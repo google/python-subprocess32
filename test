@@ -2,7 +2,11 @@
 
 # This is for my own convenience, edit it for your own environment.
 
-PYTHON=python
+PYTHON=../Python-2.4.6/python
+$PYTHON setup.py build || exit 1
+LANG=C PYTHONPATH=./build/lib.linux-x86_64-2.4 $PYTHON test_subprocess32.py || exit 1
+
+PYTHON=python2
 $PYTHON setup.py build || exit 1
 
 export PYTHONPATH=./build/lib.linux-x86_64-2.7

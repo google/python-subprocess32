@@ -433,8 +433,9 @@ class TimeoutExpired(Exception):
     """This exception is raised when the timeout expires while waiting for a
     child process.
     """
-    def __init__(self, cmd, output=None):
+    def __init__(self, cmd, timeout, output=None):
         self.cmd = cmd
+        self.timeout = timeout
         self.output = output
 
     def __str__(self):
@@ -624,7 +625,7 @@ def check_output(*popenargs, **kwargs):
     except TimeoutExpired:
         process.kill()
         output, unused_err = process.communicate()
-        raise TimeoutExpired(process.args, output=output)
+        raise TimeoutExpired(process.args, timeout, output=output)
     retcode = process.poll()
     if retcode:
         raise CalledProcessError(retcode, process.args, output=output)
@@ -910,7 +911,7 @@ class Popen(object):
             return (stdout, stderr)
 
         try:
-            stdout, stderr = self._communicate(input, endtime)
+            stdout, stderr = self._communicate(input, endtime, timeout)
         finally:
             self._communication_started = True
 
@@ -931,12 +932,12 @@ class Popen(object):
             return endtime - time.time()
 
 
-    def _check_timeout(self, endtime):
+    def _check_timeout(self, endtime, orig_timeout):
         """Convenience for checking if a timeout has expired."""
         if endtime is None:
             return
         if time.time() > endtime:
-            raise TimeoutExpired(self.args)
+            raise TimeoutExpired(self.args, orig_timeout)
 
 
     if mswindows:
@@ -1122,9 +1123,11 @@ class Popen(object):
             return self.returncode
 
 
-        def wait(self, timeout=None):
+        def wait(self, timeout=None, endtime=None):
             """Wait for child process to terminate.  Returns returncode
             attribute."""
+            if endtime is not None:
+                timeout = self._remaining_time(endtime)
             if timeout is None:
                 timeout = _subprocess.INFINITE
             else:
@@ -1132,7 +1135,7 @@ class Popen(object):
             if self.returncode is None:
                 result = _subprocess.WaitForSingleObject(self._handle, timeout)
                 if result == _subprocess.WAIT_TIMEOUT:
-                    raise TimeoutExpired(self.args)
+                    raise TimeoutExpired(self.args, timeout)
                 self.returncode = _subprocess.GetExitCodeProcess(self._handle)
             return self.returncode
 
@@ -1142,7 +1145,7 @@ class Popen(object):
             fh.close()
 
 
-        def _communicate(self, input, endtime):
+        def _communicate(self, input, endtime, orig_timeout):
             # Start reader threads feeding into a list hanging off of this
             # object, unless they've already been started.
             if self.stdout and not hasattr(self, "_stdout_buff"):
@@ -1620,13 +1623,18 @@ class Popen(object):
         def wait(self, timeout=None, endtime=None):
             """Wait for child process to terminate.  Returns returncode
             attribute."""
-            # If timeout was passed but not endtime, compute endtime in terms of
-            # timeout.
-            if endtime is None and timeout is not None:
-                endtime = time.time() + timeout
             if self.returncode is not None:
                 return self.returncode
-            elif endtime is not None:
+
+            # endtime is preferred to timeout.  timeout is only used for
+            # printing.
+            if endtime is not None or timeout is not None:
+                if endtime is None:
+                    endtime = time.time() + timeout
+                elif timeout is None:
+                    timeout = self._remaining_time(endtime)
+
+            if endtime is not None:
                 # Enter a busy loop if we have a timeout.  This busy loop was
                 # cribbed from Lib/threading.py in Thread.wait() at r71065.
                 delay = 0.0005 # 500 us -> initial delay of 1 ms
@@ -1638,7 +1646,7 @@ class Popen(object):
                         break
                     remaining = self._remaining_time(endtime)
                     if remaining <= 0:
-                        raise TimeoutExpired(self.args)
+                        raise TimeoutExpired(self.args, timeout)
                     delay = min(delay * 2, remaining, .05)
                     time.sleep(delay)
             elif self.returncode is None:
@@ -1647,7 +1655,7 @@ class Popen(object):
             return self.returncode
 
 
-        def _communicate(self, input, endtime):
+        def _communicate(self, input, endtime, orig_timeout):
             if self.stdin and not self._communication_started:
                 # Flush stdio buffer.  This might block, if the user has
                 # been writing to .stdin in an uncontrolled fashion.
@@ -1656,9 +1664,11 @@ class Popen(object):
                     self.stdin.close()
 
             if _has_poll:
-                stdout, stderr = self._communicate_with_poll(input, endtime)
+                stdout, stderr = self._communicate_with_poll(input, endtime,
+                                                             orig_timeout)
             else:
-                stdout, stderr = self._communicate_with_select(input, endtime)
+                stdout, stderr = self._communicate_with_select(input, endtime,
+                                                               orig_timeout)
 
             self.wait(timeout=self._remaining_time(endtime))
 
@@ -1681,7 +1691,7 @@ class Popen(object):
             return (stdout, stderr)
 
 
-        def _communicate_with_poll(self, input, endtime):
+        def _communicate_with_poll(self, input, endtime, orig_timeout):
             stdout = None # Return
             stderr = None # Return
 
@@ -1733,7 +1743,7 @@ class Popen(object):
                     if e.args[0] == errno.EINTR:
                         continue
                     raise
-                self._check_timeout(endtime)
+                self._check_timeout(endtime, orig_timeout)
 
                 for fd, mode in ready:
                     if mode & select.POLLOUT:
@@ -1754,7 +1764,7 @@ class Popen(object):
             return (stdout, stderr)
 
 
-        def _communicate_with_select(self, input, endtime):
+        def _communicate_with_select(self, input, endtime, orig_timeout):
             if not self._communication_started:
                 self._read_set = []
                 self._write_set = []
@@ -1797,9 +1807,9 @@ class Popen(object):
                 # According to the docs, returning three empty lists indicates
                 # that the timeout expired.
                 if not (rlist or wlist or xlist):
-                    raise TimeoutExpired(self.args)
+                    raise TimeoutExpired(self.args, orig_timeout)
                 # We also check what time it is ourselves for good measure.
-                self._check_timeout(endtime)
+                self._check_timeout(endtime, orig_timeout)
 
                 if self.stdin in wlist:
                     chunk = self._input[self._input_offset :

@@ -5,7 +5,7 @@ from distutils.core import setup, Extension
 
 
 def main():
-    if not sys.version.startswith('2.'):
+    if sys.version_info[0] != 2:
         sys.stderr.write('This backport is for Python 2.x only.\n')
         sys.exit(1)
 
@@ -14,13 +14,14 @@ def main():
 
     setup(
       name='subprocess32',
-      version='3.2.5b2',
+      version='3.2.5rc1',
       description='Backport of the subprocess module from Python 3.2.5 for use on 2.x.',
       long_description="""
 This is a backport of the subprocess standard library module from
 Python 3.2.5 for use on Python 2.4, 2.5, 2.6 and 2.7.
 It includes bugfixes and new features.  On POSIX systems it is
-MUCH more reliable when used in threaded applications.""",
+MUCH more reliable when used in threaded applications.
+Bonus: It also includes timeout support from Python 3.3.""",
       license='PSF license',
 
       maintainer='Gregory P. Smith',

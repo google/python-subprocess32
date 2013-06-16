@@ -1,5 +1,5 @@
 -----------------
-2013-06-15 3.2.5b2
+2013-06-15 3.2.5rc1
 -----------------
 
 * Fixes issue #16650 - Don't reference ECHILD from outside the local scope.
