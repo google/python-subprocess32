@@ -803,21 +803,22 @@ class Popen(object):
         self._closed_child_pipe_fds = False
         exception_cleanup_needed = False
         try:
-            self._execute_child(args, executable, preexec_fn, close_fds,
-                                pass_fds, cwd, env, universal_newlines,
-                                startupinfo, creationflags, shell,
-                                p2cread, p2cwrite,
-                                c2pread, c2pwrite,
-                                errread, errwrite,
-                                restore_signals, start_new_session)
-        except:
-            # The cleanup is performed within the finally block rather
-            # than simply within this except block before the raise so
-            # that any exceptions raised and handled within it do not
-            # clobber the exception context we want to propagate upwards.
-            # This is only necessary in Python 2.
-            exception_cleanup_needed = True
-            raise
+            try:
+                self._execute_child(args, executable, preexec_fn, close_fds,
+                                    pass_fds, cwd, env, universal_newlines,
+                                    startupinfo, creationflags, shell,
+                                    p2cread, p2cwrite,
+                                    c2pread, c2pwrite,
+                                    errread, errwrite,
+                                    restore_signals, start_new_session)
+            except:
+                # The cleanup is performed within the finally block rather
+                # than simply within this except block before the raise so
+                # that any exceptions raised and handled within it do not
+                # clobber the exception context we want to propagate upwards.
+                # This is only necessary in Python 2.
+                exception_cleanup_needed = True
+                raise
         finally:
             if exception_cleanup_needed:
                 for f in filter(None, (self.stdin, self.stdout, self.stderr)):
@@ -1591,7 +1592,7 @@ class Popen(object):
                     pid, sts = _waitpid(self.pid, _WNOHANG)
                     if pid == self.pid:
                         self._handle_exitstatus(sts)
-                except _os_error as e:
+                except _os_error, e:
                     if _deadstate is not None:
                         self.returncode = _deadstate
                     elif e.errno == errno.ECHILD:
