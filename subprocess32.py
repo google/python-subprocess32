@@ -1513,29 +1513,30 @@ class Popen(object):
 
                 # Wait for exec to fail or succeed; possibly raising exception
                 # exception (limited in size)
-                data = ''
+                errpipe_data = ''
                 while True:
                     part = _eintr_retry_call(os.read, errpipe_read, 50000)
-                    data += part
-                    if not part or len(data) > 50000:
+                    errpipe_data += part
+                    if not part or len(errpipe_data) > 50000:
                         break
             finally:
                 # be sure the FD is closed no matter what
                 os.close(errpipe_read)
 
-            if data != "":
+            if errpipe_data != "":
                 try:
                     _eintr_retry_call(os.waitpid, self.pid, 0)
                 except OSError, e:
                     if e.errno != errno.ECHILD:
                         raise
                 try:
-                    exception_name, hex_errno, err_msg = data.split(':', 2)
+                    exception_name, hex_errno, err_msg = (
+                            errpipe_data.split(':', 2))
                 except ValueError:
-                    print 'Bad exception data:', repr(data)
                     exception_name = 'RuntimeError'
                     hex_errno = '0'
-                    err_msg = 'Unknown'
+                    err_msg = ('Bad exception data from child: ' +
+                               repr(errpipe_data))
                 child_exception_type = getattr(
                         exceptions, exception_name, RuntimeError)
                 if issubclass(child_exception_type, OSError) and hex_errno:
