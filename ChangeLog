@@ -1,3 +1,26 @@
+-----------------
+2013-06-15 3.2.5b1
+-----------------
+
+* Remove a bare print to stdout that could have happened if the child process
+  wrote garbage to its pre-exec error pipe.
+* Fixes issue #16327 - the subprocess module no longer leaks file descriptors
+  used for stdin/stdout/stderr pipes to the child when the fork() fails.  It
+  also no longer potentially double closes these pipe fds.
+* Correct the Python version check around use of imp_module to specify 2.6.3
+  as the minimum version that exists in. Why is anyone using such an old 2.6?
+* Fixes Issue #16114: The subprocess module no longer provides a misleading
+  error message stating that args[0] did not exist when either the cwd or
+  executable keyword arguments specified a path that did not exist.
+* Add more Popen cwd tests.
+* Handle errno.ECHILD in poll.
+* Don't leak a reference to the gc module on capi use error.
+* Check return value to avoid a crash if the capi were misused.
+* Check result of PyObject_IsTrue().
+* Adds test_universal_newlines_communicate_input_none.
+* Most everything above consists of backports.  See the hg logs for their
+  upstream hg.python.org cpython revision numbers.
+
 ----------------
 2012-06-10 3.2.3
 ----------------
