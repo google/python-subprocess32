@@ -433,17 +433,6 @@ child_exec(char *const exec_array[],
         POSIX_CALL(close(errwrite));
     }
 
-    if (close_fds) {
-        int local_max_fd = max_fd;
-#if defined(__NetBSD__)
-        local_max_fd = fcntl(0, F_MAXFD);
-        if (local_max_fd < 0)
-            local_max_fd = max_fd;
-#endif
-        /* TODO HP-UX could use pstat_getproc() if anyone cares about it. */
-        _close_open_fd_range(3, local_max_fd, py_fds_to_keep);
-    }
-
     if (cwd)
         POSIX_CALL(chdir(cwd));
 
@@ -470,6 +459,17 @@ child_exec(char *const exec_array[],
             goto error;
         }
         /* Py_DECREF(result); - We're about to exec so why bother? */
+    }
+
+    if (close_fds) {
+        int local_max_fd = max_fd;
+#if defined(__NetBSD__)
+        local_max_fd = fcntl(0, F_MAXFD);
+        if (local_max_fd < 0)
+            local_max_fd = max_fd;
+#endif
+        /* TODO HP-UX could use pstat_getproc() if anyone cares about it. */
+        _close_open_fd_range(3, local_max_fd, py_fds_to_keep);
     }
 
     /* This loop matches the Lib/os.py _execvpe()'s PATH search when */

@@ -1,3 +1,6 @@
+* Fixes issue #18763: close_fd file descriptors are now closed after
+  any preexec_fn call.
+
 -----------------
 2013-06-15 3.2.5rc1
 -----------------
