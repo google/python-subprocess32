@@ -1382,12 +1382,8 @@ class POSIXProcessTestCase(BaseTestCase):
             os.close(0)
             os.close(1)
 
-            # Side test: if errpipe_write fails to have its CLOEXEC
-            # flag set this should cause the parent to think the exec
-            # failed.  Extremely unlikely: everyone supports CLOEXEC.
             subprocess.Popen([
-                    sys.executable, "-c",
-                    "print('AssertionError:0:CLOEXEC failure.')"]).wait()
+                    sys.executable, "-c", "pass"]).wait()
         finally:
             # Restore original stdin and stdout
             os.dup2(new_stdin, 0)

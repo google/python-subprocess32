@@ -1,4 +1,11 @@
 -----------------
+2014-04-04 3.2.6
+-----------------
+
+- Fixes issue #16962: Use getdents64 instead of the obsolete getdents syscall
+  on Linux.  Some architectures do not implement the latter.
+
+-----------------
 2013-12-10 3.2.5
 -----------------
 
