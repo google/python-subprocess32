@@ -27,6 +27,12 @@
 #include <dirent.h>
 #endif
 
+#if defined(__ANDROID__) && !defined(SYS_getdents64)
+/* Android doesn't expose syscalls, add the definition manually. */
+# include <sys/linux-syscalls.h>
+# define SYS_getdents64  __NR_getdents64
+#endif
+
 #include "_posixsubprocess_helpers.c"
 
 #if (PY_VERSION_HEX < 0x02060300)
