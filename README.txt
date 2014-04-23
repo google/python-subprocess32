@@ -10,7 +10,7 @@ Refer to the Python 3.2 documentation for usage information:
 
 Timeout support backported from Python 3.3 is also included.
 
-Bugs?  Try to reproduce them on the latest Python 3.3.x itself and file bug
-reports on http://bugs.python.org/.
+Bugs?  Try to reproduce them on the latest Python 3.x itself and file bug
+reports on http://bugs.python.org/.  Add gregory.p.smith to the Nosy list.
 
 -- Gregory P. Smith  greg@krypto.org
