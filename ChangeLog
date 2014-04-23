@@ -1,8 +1,13 @@
 -----------------
-2014-04-04 3.2.6
+2014-04-23 3.2.6
 -----------------
 
-- Fixes issue #16962: Use getdents64 instead of the obsolete getdents syscall
+* Fixes issue #21291: Popen.wait() is now thread safe so that multiple
+  threads may be calling wait() or poll() on a Popen instance at the same time
+  without losing the Popen.returncode value.
+* Fixes issue #14396: Handle the odd rare case of waitpid returning 0 when not
+  expected in Popen.wait().
+* Fixes issue #16962: Use getdents64 instead of the obsolete getdents syscall
   on Linux.  Some architectures do not implement the latter.
 
 -----------------
