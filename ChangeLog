@@ -1,5 +1,5 @@
 -----------------
-2014-??-?? 3.2.7
+2014-06-01 3.2.7rc1
 -----------------
 
 * Issue #21618: The subprocess module could fail to close open fds that were
