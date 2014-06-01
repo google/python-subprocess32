@@ -7,6 +7,7 @@ import signal
 import os
 import errno
 import tempfile
+import textwrap
 import time
 try:
     import threading
@@ -1626,6 +1627,60 @@ class POSIXProcessTestCase(BaseTestCase):
         self.assertFalse(remaining_fds & fds_to_keep & open_fds,
                          "Some fds not in pass_fds were left open")
         self.assertIn(1, remaining_fds, "Subprocess failed")
+
+
+    def test_close_fds_when_max_fd_is_lowered(self):
+        """Confirm that issue21618 is fixed (may fail under valgrind)."""
+        fd_status = test_support.findfile("testdata/fd_status.py")
+
+        open_fds = set()
+        # Add a bunch more fds to pass down.
+        for _ in range(40):
+            fd = os.open("/dev/null", os.O_RDONLY)
+            open_fds.add(fd)
+
+        # Leave a two pairs of low ones available for use by the
+        # internal child error pipe and the stdout pipe.
+        # We also leave 10 more open for use by the Python 2 startup
+        # import machinery which tends to consume several at once.
+        for fd in sorted(open_fds)[:14]:
+            os.close(fd)
+            open_fds.remove(fd)
+
+        for fd in open_fds:
+            self.addCleanup(os.close, fd)
+
+        max_fd_open = max(open_fds)
+
+        import resource
+        rlim_cur, rlim_max = resource.getrlimit(resource.RLIMIT_NOFILE)
+        try:
+            # 29 is lower than the highest fds we are leaving open.
+            resource.setrlimit(resource.RLIMIT_NOFILE, (29, rlim_max))
+            # Launch a new Python interpreter with our low fd rlim_cur that
+            # inherits open fds above that limit.  It then uses subprocess
+            # with close_fds=True to get a report of open fds in the child.
+            # An explicit list of fds to check is passed to fd_status.py as
+            # letting fd_status rely on its default logic would miss the
+            # fds above rlim_cur as it normally only checks up to that limit.
+            p = subprocess.Popen(
+                [sys.executable, '-c',
+                 textwrap.dedent("""
+                     import subprocess32, sys
+                     subprocess32.Popen([sys.executable, %(fd_status)r] +
+                                        [str(x) for x in range(%(max_fd)d)],
+                                        close_fds=True).wait()
+                     """ % dict(fd_status=fd_status, max_fd=max_fd_open+1))],
+                stdout=subprocess.PIPE, close_fds=False)
+        finally:
+            resource.setrlimit(resource.RLIMIT_NOFILE, (rlim_cur, rlim_max))
+
+        output, unused_stderr = p.communicate()
+        remaining_fds = set(map(int, output.strip().split(',')))
+
+        self.assertFalse(remaining_fds & open_fds,
+                         msg="Some fds were left open.")
+
 
     def test_pass_fds(self):
         fd_status = test_support.findfile("testdata/fd_status.py")
