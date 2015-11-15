@@ -13,7 +13,7 @@ Timeout support backported from Python 3.3 is included.
 Otherwise assume that the features are frozen at 3.2.
 
 Bugs?  Try to reproduce them on the latest Python 3.x itself and file bug
-reports on http://bugs.python.org/.  Add gregory.p.smith to the Nosy list.
+reports on https://bugs.python.org/.  Add gregory.p.smith to the Nosy list.
 
 If you have reason to believe the issue is specifically with this backport
 and not a problem in Python 3 itself, use the github issue tracker.
