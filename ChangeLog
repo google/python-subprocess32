@@ -1,4 +1,13 @@
 -----------------
+2014-11-14 3.2.7rc2
+-----------------
+
+* Moved the repository from code.google.com to github.
+* Added a _WAIT_TIMEOUT to satisfy the unsupported people entirely on
+  their own trying to use this on Windows.
+* Similarly: Updated setup.py to not build the extension on non-posix.
+
+-----------------
 2014-06-01 3.2.7rc1
 -----------------
 
