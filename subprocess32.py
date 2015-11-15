@@ -506,6 +506,9 @@ if mswindows:
                              STD_INPUT_HANDLE, STD_OUTPUT_HANDLE,
                              STD_ERROR_HANDLE, SW_HIDE,
                              STARTF_USESTDHANDLES, STARTF_USESHOWWINDOW)
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/ms687032(v=vs.85).aspx
+    # Note: In Python 3.3 this constant is found in the _winapi module.
+    _WAIT_TIMEOUT = 0x102
 
     __all__.extend(["CREATE_NEW_CONSOLE", "CREATE_NEW_PROCESS_GROUP",
                     "STD_INPUT_HANDLE", "STD_OUTPUT_HANDLE",
@@ -1144,7 +1147,7 @@ class Popen(object):
                 timeout = int(timeout * 1000)
             if self.returncode is None:
                 result = _subprocess.WaitForSingleObject(self._handle, timeout)
-                if result == _subprocess.WAIT_TIMEOUT:
+                if result == _WAIT_TIMEOUT:
                     raise TimeoutExpired(self.args, timeout)
                 self.returncode = _subprocess.GetExitCodeProcess(self._handle)
             return self.returncode
