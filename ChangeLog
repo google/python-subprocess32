@@ -5,6 +5,9 @@
 * Issue #6973: When we know a subprocess.Popen process has died, do
   not allow the send_signal(), terminate(), or kill() methods to do
   anything as they could potentially signal a different process.
+* Issue #23564: Fixed a partially broken sanity check in the _posixsubprocess
+  internals regarding how fds_to_pass were passed to the child.  The bug had
+  no actual impact as subprocess32.py already avoided it.
 
 -----------------
 2015-11-14 3.2.7rc2

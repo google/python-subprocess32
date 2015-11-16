@@ -1980,9 +1980,43 @@ class ProcessTestCasePOSIXPurePython(ProcessTestCase, POSIXProcessTestCase):
         ProcessTestCase.tearDown(self)
 
 
+class POSIXSubprocessModuleTestCase(unittest.TestCase):
+    def test_fork_exec_sorted_fd_sanity_check(self):
+        # Issue #23564: sanity check the fork_exec() fds_to_keep sanity check.
+        _posixsubprocess = subprocess._posixsubprocess
+        gc_enabled = gc.isenabled()
+        try:
+            gc.enable()
+
+            for fds_to_keep in (
+                (-1, 2, 3, 4, 5),  # Negative number.
+                ('str', 4),  # Not an int.
+                (18, 23, 42, 2**63),  # Out of range.
+                (5, 4),  # Not sorted.
+                (6, 7, 7, 8),  # Duplicate.
+            ):
+                try:
+                    _posixsubprocess.fork_exec(
+                        ["false"], ["false"],
+                        True, fds_to_keep, None, ["env"],
+                        -1, -1, -1, -1,
+                        1, 2, 3, 4,
+                        True, True, None)
+                except ValueError, exception:
+                    self.assertTrue('fds_to_keep' in str(exception),
+                                    msg=str(exception))
+                else:
+                    self.fail("ValueError not raised, fds_to_keep=%s" %
+                              (fds_to_keep,))
+        finally:
+            if not gc_enabled:
+                gc.disable()
+
+
 if not getattr(subprocess, '_posixsubprocess', False):
     print >>sys.stderr, "_posixsubprocess extension module not found."
     class ProcessTestCasePOSIXPurePython(unittest.TestCase): pass
+    class POSIXSubprocessModuleTestCase(unittest.TestCase): pass
 
 
 class HelperFunctionTests(unittest.TestCase):
@@ -2114,6 +2148,7 @@ if sys.version_info[:2] <= (2,4):
 def test_main():
     unit_tests = (ProcessTestCase,
                   POSIXProcessTestCase,
+                  POSIXSubprocessModuleTestCase,
                   Win32ProcessTestCase,
                   ProcessTestCasePOSIXPurePython,
                   ProcessTestCaseNoPoll,
