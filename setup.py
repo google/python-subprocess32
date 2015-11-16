@@ -26,8 +26,8 @@ This is a backport of the subprocess standard library module from
 Python 3.2 & 3.3 for use on Python 2.4, 2.5, 2.6 and 2.7.
 It includes bugfixes and new features.  On POSIX systems it is
 guaranteed to be reliable when used in threaded applications.
-Bonus: It includes timeout support from Python 3.3.
-It has not been tested on Windows.""",
+It includes timeout support from Python 3.3 but otherwise matches
+3.2's API.  It has not been tested on Windows.""",
       license='PSF license',
 
       maintainer='Gregory P. Smith',
