@@ -11,8 +11,8 @@ POSIX platforms.  The most important of which is a C extension module
 used internally to handle the code path between fork() and exec().
 This module is reliable when an application is using threads.
 
-Refer to
-[the Python 3.3 subprocess documentation](https://docs.python.org/3.3/library/subprocess.html)
+Refer to the
+[Python 3.3 subprocess documentation](https://docs.python.org/3.3/library/subprocess.html)
 for usage information.
 
 * Timeout support backported from Python 3.3 is included.
@@ -38,7 +38,8 @@ Got Bugs?
 ---------
 
 Try to reproduce them on the latest Python 3.x itself and file bug
-reports on https://bugs.python.org/.  Add gregory.p.smith to the Nosy list.
+reports on [bugs.python.org](https://bugs.python.org/).
+Add gregory.p.smith to the Nosy list.
 
 If you have reason to believe the issue is specifically with this backport
 and not a problem in Python 3 itself, use the github issue tracker.
