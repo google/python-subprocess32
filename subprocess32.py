@@ -1223,8 +1223,10 @@ class Popen(object):
             return (stdout, stderr)
 
         def send_signal(self, sig):
-            """Send a signal to the process
-            """
+            """Send a signal to the process."""
+            # Don't signal a process that we know has already died.
+            if self.returncode is not None:
+                return
             if sig == signal.SIGTERM:
                 self.terminate()
             elif sig == signal.CTRL_C_EVENT:
@@ -1235,8 +1237,10 @@ class Popen(object):
                 raise ValueError("Unsupported signal: %s" % sig)
 
         def terminate(self):
-            """Terminates the process
-            """
+            """Terminates the process."""
+            # Don't terminate a process that we know has already died.
+            if self.returncode is not None:
+                return
             _subprocess.TerminateProcess(self._handle, 1)
 
         kill = terminate
@@ -1881,7 +1885,9 @@ class Popen(object):
         def send_signal(self, sig):
             """Send a signal to the process
             """
-            os.kill(self.pid, sig)
+            # Skip signalling a process that we know has already died.
+            if self.returncode is None:
+                os.kill(self.pid, sig)
 
         def terminate(self):
             """Terminate the process with SIGTERM
