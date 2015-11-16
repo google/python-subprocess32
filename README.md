@@ -28,9 +28,9 @@ else:
     import subprocess
 ```
 
-Or if you fully control your Python 2.7 installation, just drop this
-in as a replacement for its subprocess module.  Users will thank you
-by not filing concurrency bugs.
+Or if you fully control your POSIX Python 2.7 installation, just drop
+this in as a replacement for its subprocess module.  Users will thank
+you by not filing concurrency bugs.
 
 Got Bugs?
 ---------
