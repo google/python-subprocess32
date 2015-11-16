@@ -2,8 +2,6 @@ subprocess32
 ------------
 
 This is a backport of the Python 3 subprocess module for use on Python 2.
-It works on Python 2.4 through 2.7.
-
 This code has not been tested on Windows or other non-POSIX platforms.
 
 subprocess32 includes many important reliability bug fixes relevant on

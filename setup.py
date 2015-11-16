@@ -19,12 +19,12 @@ def main():
 
     setup(
       name='subprocess32',
-      version='3.2.7rc2',
-      description='Backport of the subprocess module from Python 3.2/3.3 for use on 2.x.',
+      version='3.2.7',
+      description='A backport of the subprocess module from Python 3.2/3.3 for use on 2.x.',
       long_description="""
 This is a backport of the subprocess standard library module from
-Python 3.2 & 3.3 for use on Python 2.4, 2.5, 2.6 and 2.7.
-It includes bugfixes and new features.  On POSIX systems it is
+Python 3.2 & 3.3 for use on Python 2.
+It includes bugfixes and some new features.  On POSIX systems it is
 guaranteed to be reliable when used in threaded applications.
 It includes timeout support from Python 3.3 but otherwise matches
 3.2's API.  It has not been tested on Windows.""",
@@ -36,6 +36,23 @@ It includes timeout support from Python 3.3 but otherwise matches
 
       ext_modules=ext_modules,
       py_modules=['subprocess32'],
+
+      classifiers=[
+          'Intended Audience :: Developers',
+          'Topic :: Software Development :: Libraries',
+          'Development Status :: 5 - Production/Stable',
+          'License :: OSI Approved :: Python Software Foundation License',
+          'Operating System :: POSIX',
+          'Operating System :: POSIX :: BSD',
+          'Operating System :: POSIX :: Linux',
+          'Operating System :: POSIX :: SunOS/Solaris',
+          'Programming Language :: Python :: 2.4',
+          'Programming Language :: Python :: 2.5',
+          'Programming Language :: Python :: 2.6',
+          'Programming Language :: Python :: 2.7',
+          'Programming Language :: Python :: 2 :: Only',
+          'Programming Language :: Python :: Implementation :: CPython',
+      ],
     )
 
 
