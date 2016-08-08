@@ -1,4 +1,11 @@
 -----------------
+2016-??-?? 3.2.8
+-----------------
+
+* Fix a compilation issue regarding O_CLOEXEC not being defined on old
+  Linux distros such as RHEL 5.
+
+-----------------
 2015-11-15 3.2.7
 -----------------
 
