@@ -759,7 +759,7 @@ subprocess_cloexec_pipe(PyObject *self, PyObject *noargs)
     int fds[2];
     int res, saved_errno;
     long oldflags;
-#ifdef HAVE_PIPE2
+#if (defined(HAVE_PIPE2) && defined(O_CLOEXEC))
     Py_BEGIN_ALLOW_THREADS
     res = pipe2(fds, O_CLOEXEC);
     Py_END_ALLOW_THREADS
@@ -784,7 +784,7 @@ subprocess_cloexec_pipe(PyObject *self, PyObject *noargs)
         }
         if (res == 0)
             res = fcntl(fds[1], F_SETFD, oldflags | FD_CLOEXEC);
-#ifdef HAVE_PIPE2
+#if (defined(HAVE_PIPE2) && defined(O_CLOEXEC))
     }
 #endif
     if (res == 0 && fds[1] < 3) {
