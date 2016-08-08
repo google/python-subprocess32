@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 
 import os
 import sys
@@ -6,28 +6,38 @@ from distutils.core import setup, Extension
 
 
 def main():
-    if sys.version_info[0] != 2:
-        sys.stderr.write('This backport is for Python 2.x only.\n')
-        sys.exit(1)
-
-    ext = Extension('_posixsubprocess', ['_posixsubprocess.c'],
-                    depends=['_posixsubprocess_helpers.c'])
-    if os.name == 'posix':
-        ext_modules = [ext]
-    else:
-        ext_modules = []
+    ext_modules = []
+    py_modules = []
+    packages = []
+    package_dir = {}
+    if sys.version_info[0] == 2:  # PY2
+        py_modules.append('subprocess32')
+        if os.name == 'posix':
+            ext = Extension('_posixsubprocess', ['_posixsubprocess.c'],
+                            depends=['_posixsubprocess_helpers.c'])
+            ext_modules.append(ext)
+    else:  # PY3
+        # Install a redirect that makes subprocess32 == subprocess on import.
+        packages.append('subprocess32')
+        package_dir['subprocess32'] = 'python3_redirect'
+        sys.stderr.write('subprocess32 == subprocess on Python 3.\n')
 
     setup(
       name='subprocess32',
-      version='3.2.7',
+      version='3.2.8.dev',
       description='A backport of the subprocess module from Python 3.2/3.3 for use on 2.x.',
-      long_description="""
+      long_description="""\
 This is a backport of the subprocess standard library module from
 Python 3.2 & 3.3 for use on Python 2.
+
 It includes bugfixes and some new features.  On POSIX systems it is
 guaranteed to be reliable when used in threaded applications.
 It includes timeout support from Python 3.3 but otherwise matches
-3.2's API.  It has not been tested on Windows.""",
+3.2's API.
+
+It has not been tested by the author on Windows.
+
+On Python 3, it merely redirects the subprocess32 name to subprocess.""",
       license='PSF license',
 
       maintainer='Gregory P. Smith',
@@ -35,7 +45,9 @@ It includes timeout support from Python 3.3 but otherwise matches
       url='https://github.com/google/python-subprocess32',
 
       ext_modules=ext_modules,
-      py_modules=['subprocess32'],
+      py_modules=py_modules,
+      packages=packages,
+      package_dir=package_dir,
 
       classifiers=[
           'Intended Audience :: Developers',

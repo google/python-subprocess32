@@ -1,13 +1,23 @@
-#!/bin/bash
+#!/bin/bash -ex
 
 # This is for my own convenience, edit it for your own environment.
 
-PYTHON=../Python-2.4.6/python
-$PYTHON setup.py build || exit 1
-LANG=C PYTHONPATH=./build/lib.linux-x86_64-2.4 $PYTHON test_subprocess32.py || exit 1
+PYTHON=python3
+"$PYTHON" -V
+"$PYTHON" setup.py build
+# Merely test that it imports.  Under Python 3, setup.py should've installed a
+# redirection hack making subprocess32 == subprocess.  We cd in order to avoid
+# attempting to import the local subprocess32.py file.
+(cd build && PYTHONPATH=lib "$PYTHON" -c \
+  "import subprocess as s, subprocess32 as s32; assert s is s32, (s, s32)")
+
+PYTHON="../Python-2.4.6/python"
+"$PYTHON" -V
+"$PYTHON" setup.py build
+LANG=C PYTHONPATH=build/lib.linux-x86_64-2.4 "$PYTHON" test_subprocess32.py
 
 PYTHON=python2
-$PYTHON setup.py build || exit 1
-
-export PYTHONPATH=./build/lib.linux-x86_64-2.7
-exec $PYTHON test_subprocess32.py
+"$PYTHON" -V
+"$PYTHON" setup.py build
+export PYTHONPATH=build/lib.linux-x86_64-2.7
+exec "$PYTHON" test_subprocess32.py
