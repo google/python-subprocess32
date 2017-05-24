@@ -2294,7 +2294,9 @@ def test_main():
                   ProcessTestCasePOSIXPurePython,
                   ProcessTestCaseNoPoll,
                   HelperFunctionTests,
-                  ContextManagerTests)
+                  ContextManagerTests,
+                  RunFuncTestCase,
+                 )
 
     test_support.run_unittest(*unit_tests)
     reap_children()
