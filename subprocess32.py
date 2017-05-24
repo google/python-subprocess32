@@ -81,16 +81,18 @@ class CalledProcessError(SubprocessError):
             return "Command '%s' returned non-zero exit status %d." % (
                     self.cmd, self.returncode)
 
-    @property
-    def stdout(self):
+    #@property
+    def __stdout_getter(self):
         """Alias for output attribute, to match stderr"""
         return self.output
 
-    @stdout.setter
-    def stdout(self, value):
+    #@stdout.setter  # Required Python 2.6
+    def __stdout_setter(self, value):
         # There's no obvious reason to set this, but allow it anyway so
         # .stdout is a transparent alias for .output
         self.output = value
+
+    stdout = property(__stdout_getter, __stdout_setter)  # Python 2.4
 
 
 class TimeoutExpired(SubprocessError):
@@ -110,15 +112,17 @@ class TimeoutExpired(SubprocessError):
         return ("Command '%s' timed out after %s seconds" %
                 (self.cmd, self.timeout))
 
-    @property
-    def stdout(self):
+    #@property
+    def __stdout_getter(self):
         return self.output
 
-    @stdout.setter
-    def stdout(self, value):
+    #@stdout.setter  # Required Python 2.6
+    def __stdout_setter(self, value):
         # There's no obvious reason to set this, but allow it anyway so
         # .stdout is a transparent alias for .output
         self.output = value
+
+    stdout = property(__stdout_getter, __stdout_setter)  # Python 2.4
 
 
 if mswindows:
@@ -376,7 +380,9 @@ def run(*popenargs, **kwargs):
             raise ValueError('stdin and input arguments may not both be used.')
         kwargs['stdin'] = PIPE
 
-    with Popen(*popenargs, **kwargs) as process:
+    process = Popen(*popenargs, **kwargs)
+    try:
+        process.__enter__()  # No-Op really... illustrate "with in 2.4"
         try:
             stdout, stderr = process.communicate(input, timeout=timeout)
         except TimeoutExpired:
@@ -392,6 +398,9 @@ def run(*popenargs, **kwargs):
         if check and retcode:
             raise CalledProcessError(retcode, process.args,
                                      output=stdout, stderr=stderr)
+    finally:
+        # None because our context manager __exit__ does not use them.
+        process.__exit__(None, None, None)
     return CompletedProcess(process.args, retcode, stdout, stderr)
 
 

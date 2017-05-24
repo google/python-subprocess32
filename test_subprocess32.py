@@ -995,13 +995,20 @@ class RunFuncTestCase(BaseTestCase):
         # call() function with sequence argument
         cp = self.run_python("import sys; sys.exit(47)")
         self.assertEqual(cp.returncode, 47)
-        with self.assertRaises(subprocess.CalledProcessError):
+        try:
             cp.check_returncode()
+        except subprocess.CalledProcessError:
+            pass
+        else:
+            self.fail("CalledProcessError not raised")
 
     def test_check(self):
-        with self.assertRaises(subprocess.CalledProcessError) as c:
+        try:
             self.run_python("import sys; sys.exit(47)", check=True)
-        self.assertEqual(c.exception.returncode, 47)
+        except subprocess.CalledProcessError, exception:
+            self.assertEqual(exception.returncode, 47)
+        else:
+            self.fail("CalledProcessError not raised")
 
     def test_check_zero(self):
         # check_returncode shouldn't raise when returncode is zero
@@ -1013,52 +1020,58 @@ class RunFuncTestCase(BaseTestCase):
         # process gets killed when the timeout expires.  If the child isn't
         # killed, this call will deadlock since subprocess.run waits for the
         # child.
-        with self.assertRaises(subprocess.TimeoutExpired):
+        try:
             self.run_python("while True: pass", timeout=0.0001)
+        except subprocess.TimeoutExpired:
+            pass
+        else:
+            self.fail("TimeoutExpired not raised")
 
     def test_capture_stdout(self):
         # capture stdout with zero return code
         cp = self.run_python("print('BDFL')", stdout=subprocess.PIPE)
-        self.assertIn(b'BDFL', cp.stdout)
+        self.assertIn('BDFL', cp.stdout)
 
     def test_capture_stderr(self):
         cp = self.run_python("import sys; sys.stderr.write('BDFL')",
                              stderr=subprocess.PIPE)
-        self.assertIn(b'BDFL', cp.stderr)
+        self.assertIn('BDFL', cp.stderr)
 
     def test_check_output_stdin_arg(self):
         # run() can be called with stdin set to a file
         tf = tempfile.TemporaryFile()
         self.addCleanup(tf.close)
-        tf.write(b'pear')
+        tf.write('pear')
         tf.seek(0)
         cp = self.run_python(
                  "import sys; sys.stdout.write(sys.stdin.read().upper())",
                 stdin=tf, stdout=subprocess.PIPE)
-        self.assertIn(b'PEAR', cp.stdout)
+        self.assertIn('PEAR', cp.stdout)
 
     def test_check_output_input_arg(self):
         # check_output() can be called with input set to a string
         cp = self.run_python(
                 "import sys; sys.stdout.write(sys.stdin.read().upper())",
-                input=b'pear', stdout=subprocess.PIPE)
-        self.assertIn(b'PEAR', cp.stdout)
+                input='pear', stdout=subprocess.PIPE)
+        self.assertIn('PEAR', cp.stdout)
 
     def test_check_output_stdin_with_input_arg(self):
         # run() refuses to accept 'stdin' with 'input'
         tf = tempfile.TemporaryFile()
         self.addCleanup(tf.close)
-        tf.write(b'pear')
+        tf.write('pear')
         tf.seek(0)
-        with self.assertRaises(ValueError,
-              msg="Expected ValueError when stdin and input args supplied.") as c:
+        try:
             output = self.run_python("print('will not be run')",
-                                     stdin=tf, input=b'hare')
-        self.assertIn('stdin', c.exception.args[0])
-        self.assertIn('input', c.exception.args[0])
+                                     stdin=tf, input='hare')
+        except ValueError, exception:
+            self.assertIn('stdin', exception.args[0])
+            self.assertIn('input', exception.args[0])
+        else:
+            self.fail("Expected ValueError when stdin and input args supplied.")
 
     def test_check_output_timeout(self):
-        with self.assertRaises(subprocess.TimeoutExpired) as c:
+        try:
             cp = self.run_python((
                      "import sys, time\n"
                      "sys.stdout.write('BDFL')\n"
@@ -1067,15 +1080,18 @@ class RunFuncTestCase(BaseTestCase):
                     # Some heavily loaded buildbots (sparc Debian 3.x) require
                     # this much time to start and print.
                     timeout=3, stdout=subprocess.PIPE)
-        self.assertEqual(c.exception.output, b'BDFL')
-        # output is aliased to stdout
-        self.assertEqual(c.exception.stdout, b'BDFL')
+        except subprocess.TimeoutExpired, exception:
+            self.assertEqual(exception.output, 'BDFL')
+            # output is aliased to stdout
+            self.assertEqual(exception.stdout, 'BDFL')
+        else:
+            self.fail("TimeoutExpired not raised")
 
     def test_run_kwargs(self):
         newenv = os.environ.copy()
         newenv["FRUIT"] = "banana"
         cp = self.run_python(('import sys, os;'
-                      'sys.exit(33 if os.getenv("FRUIT")=="banana" else 31)'),
+                              'os.getenv("FRUIT")=="banana" and sys.exit(33) or sys.exit(31)'),
                              env=newenv)
         self.assertEqual(cp.returncode, 33)
 
