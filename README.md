@@ -14,6 +14,7 @@ Refer to the
 for usage information.
 
 * Timeout support backported from Python 3.3 is included.
+* The run() API from Python 3.5 was backported in subprocess32 3.5.0.
 * Otherwise features are frozen at the 3.2 level.
 
 Usage
@@ -28,9 +29,9 @@ else:
     import subprocess
 ```
 
-Or if you fully control your POSIX Python 2.7 installation, just drop
-this in as a replacement for its subprocess module.  Users will thank
-you by not filing concurrency bugs.
+Or if you fully control your POSIX Python 2.7 installation, this can serve
+as a replacement for its subprocess module.  Users will thank you by not
+filing concurrency bugs.
 
 Got Bugs?
 ---------
