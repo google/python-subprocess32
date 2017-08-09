@@ -35,10 +35,6 @@ check_call(...): Same as call() but raises CalledProcessError()
     if return code is not 0
 check_output(...): Same as check_call() but returns the contents of
     stdout instead of a return code
-getoutput(...): Runs a command in the shell, waits for it to complete,
-    then returns the output
-getstatusoutput(...): Runs a command in the shell, waits for it to complete,
-    then returns a (status, output) tuple
 """
 
 import sys
