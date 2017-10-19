@@ -1,5 +1,5 @@
 -----------------
-2017-08-04 3.5.0rc1
+2017-10-18 3.5.0rc1
 -----------------
 
 * Backport the new subprocess.run() API from Python 3.5.
