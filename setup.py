@@ -2,7 +2,7 @@
 
 import os
 import sys
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
 
 
 def main():
@@ -54,6 +54,8 @@ On Python 3, it merely redirects the subprocess32 name to subprocess.""",
           'Topic :: Software Development :: Libraries',
           'Development Status :: 5 - Production/Stable',
           'License :: OSI Approved :: Python Software Foundation License',
+          'Operating System :: MacOS',
+          'Operating System :: MacOS :: MacOS X',
           'Operating System :: POSIX',
           'Operating System :: POSIX :: BSD',
           'Operating System :: POSIX :: Linux',
