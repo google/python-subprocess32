@@ -49,6 +49,11 @@ On Python 3, it merely redirects the subprocess32 name to subprocess.""",
       packages=packages,
       package_dir=package_dir,
 
+      # We don't actually "support" 3.3+, we just allow installation there as
+      # we install a stub redirecting to the standard library subprocess module
+      # under the subprocess32 name.
+      python_requires='>=2.4, !=3.0.*, !=3.1.*, !=3.2.*, <4',
+
       classifiers=[
           'Intended Audience :: Developers',
           'Topic :: Software Development :: Libraries',
