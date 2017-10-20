@@ -1,5 +1,9 @@
 subprocess32
 ------------
+[![PyPI version](https://badge.fury.io/py/subprocess32.svg)](https://badge.fury.io/py/subprocess32)
+[![POSIX Build Status](https://travis-ci.org/google/python-subprocess32.svg?branch=master)](https://travis-ci.org/google/python-subprocess32)
+[![Windows Build Status](https://ci.appveyor.com/api/projects/status/53apbb2jk1uslj0m?svg=true
+)](https://ci.appveyor.com/project/gpshead/python-subprocess32)
 
 This is a backport of the Python 3 subprocess module for use on Python 2.
 This code has not been tested on Windows or other non-POSIX platforms.
