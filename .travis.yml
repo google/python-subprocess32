@@ -4,16 +4,24 @@ os: linux
 matrix:
   fast_finish: true
   allow_failures:
-    - env: OPTIONAL=true
-  include:
-    - python: 2.6
-    - python: 2.7
+    # MacOS is super high latency to execute on Travis CI, don't wait.
     - os: osx
-      # MacOS is super high latency to execute on Travis CI, don't wait.
-      env: OPTIONAL=true
+  include:
+    - python: 2.7
+    - python: 2.6
+      # Python 2.6 does not have test discovery.
+      script: python test_subprocess32.py
+    - python: 3.5
+      # Just check that the dummy shim installs and works on 3.x.
+      script: |
+        cd /  # We cannot be in the directory with subprocess32.py in it.
+        python -c 'import os, subprocess32, subprocess, sys; print("working directory:", os.getcwd()); print("subprocess32 module is", subprocess32); sys.exit(subprocess32 is not subprocess)'
+    - os: osx
+      # Travis does not have a Python runtime for MacOS.
+      #  https://pythonhosted.org/CodeChat/.travis.yml.html
+      language: generic
 install:
   - pip install .
 script:
-  - python test_subprocess32.py
-# Python 2.6 does not have test discovery.
-#  - python -m unittest discover
+  - python -m unittest discover -v
+
