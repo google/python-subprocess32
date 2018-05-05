@@ -1,4 +1,12 @@
 -----------------
+2018-05-05 3.5.0rc2
+-----------------
+
+* Fixed the packaging problem where the stdlib python3_redirect shim is
+  supposed to be installed on Python 3.
+* Renamed _posixsubprocess to _posixsubprocess32 for consistency.
+
+-----------------
 2017-10-18 3.5.0rc1
 -----------------
 

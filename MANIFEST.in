@@ -7,6 +7,7 @@ include MANIFEST.in
 
 include *.c *.h *.py
 include testdata/*
+include python3_redirect/*
 
 prune build
 prune dist
