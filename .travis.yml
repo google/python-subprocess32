@@ -9,8 +9,8 @@ matrix:
   include:
     - python: 2.7
       env:
-        - LANG=en_US.UTF-8
-        - LANG=C
+        - LANG=en_US.UTF-8 _HACK_AROUND_TRAVIS=unicode
+        - LANG=C _HACK_AROUND_TRAVIS=ascii
     - python: 2.6
       # Python 2.6 does not have test discovery.
       script: python test_subprocess32.py
