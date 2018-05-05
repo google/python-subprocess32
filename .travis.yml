@@ -24,7 +24,16 @@ matrix:
       language: generic
       osx_image: xcode7.3
       install:
-        - pip2 install --upgrade pip && pip2 -v -v install .
+        - pip2 install --upgrade pip && pip2 -v install .
+      deploy:
+        provider: pypi
+        user: "GregoryPSmith"
+        password: $TEST_PYPI_PASSWORD
+        server: https://test.pypi.org/simple/
+        on:
+#          tags: true
+          branch: travis-to-test-pypi
+        distributions: bdist_wheel
 install:
   - pip install .
 script:
