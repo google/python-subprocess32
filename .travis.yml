@@ -29,7 +29,7 @@ matrix:
         provider: pypi
         user: "GregoryPSmith"
         password: $TEST_PYPI_PASSWORD
-        server: https://test.pypi.org/simple/
+        server: https://test.pypi.org/legacy/
         on:
 #          tags: true
           branch: travis-to-test-pypi
