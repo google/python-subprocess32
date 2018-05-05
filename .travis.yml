@@ -21,7 +21,7 @@ matrix:
       #  https://pythonhosted.org/CodeChat/.travis.yml.html
       language: generic
       install:
-        - pip2 install .
+        - pip2 install --upgrade pip && pip2 -v -v install .
 install:
   - pip install .
 script:
