@@ -4,10 +4,16 @@ os: linux
 matrix:
   fast_finish: true
   allow_failures:
-    # MacOS is super high latency to execute on Travis CI, don't wait.
+    # MacOS is high latency to execute on Travis CI, don't wait.
+    # Plus some osx_image configs (xcode8.3) exhibit odd test failures.
     - os: osx
   include:
     - python: 2.7
+      deploy:
+        on:
+          branch: travis-to-test-pypi
+        # No wheels for Linux (manylinux1 is too old)
+        distributions: sdist
     - python: 2.6
       # Python 2.6 does not have test discovery.
       script: python test_subprocess32.py
@@ -26,16 +32,19 @@ matrix:
       install:
         - pip2 install --upgrade pip && pip2 -v install .
       deploy:
-        provider: pypi
-        user: "GregoryPSmith"
-        password: $TEST_PYPI_PASSWORD
-        server: https://test.pypi.org/legacy/
         on:
-#          tags: true
           branch: travis-to-test-pypi
         distributions: bdist_wheel
 install:
   - pip install .
 script:
   - python -m unittest discover -v
-
+deploy:
+  provider: pypi
+  user: "GregoryPSmith"
+  password: $TEST_PYPI_PASSWORD
+  server: https://test.pypi.org/legacy/
+  on:
+    tags: true
+    branch: _impossible..branch..name_
+  distributions: none
