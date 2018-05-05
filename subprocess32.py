@@ -547,6 +547,7 @@ class Popen(object):
             if close_fds is _PLATFORM_DEFAULT_CLOSE_FDS:
                 close_fds = True
             if pass_fds and not close_fds:
+                import warnings
                 warnings.warn("pass_fds overriding close_fds.", RuntimeWarning)
                 close_fds = True
             if startupinfo is not None:
