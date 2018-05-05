@@ -3,13 +3,21 @@
 # This is for my own convenience, edit it for your own environment.
 
 PYTHON=python3
+rm -r vvv dist
+mkdir vvv
+# Test this in a virtualenv installed from the sdist tarball becaue of:
+#  https://github.com/google/python-subprocess32/issues/44
+virtualenv -p "$PYTHON" vvv
+PYTHON=vvv/bin/python3
+PIP=vvv/bin/pip
 "$PYTHON" -V
-"$PYTHON" setup.py build
+"$PYTHON" setup.py sdist
+"$PIP" install dist/*.tar.gz
 # Merely test that it imports.  Under Python 3, setup.py should've installed a
-# redirection hack making subprocess32 == subprocess.  We cd in order to avoid
-# attempting to import the local subprocess32.py file.
-(cd build && PYTHONPATH=lib "$PYTHON" -c \
-  "import subprocess as s, subprocess32 as s32; assert s is s32, (s, s32)")
+# redirection hack making subprocess32 == subprocess.  We cd as we must not run
+# this from the directory subprocess32.py sources live in.
+(cd $(dirname "$PYTHON") && \
+ ./python3 -c "import subprocess as s, subprocess32 as s32; assert s is s32, (s, s32)")
 
 PYTHON=python2
 "$PYTHON" -V
