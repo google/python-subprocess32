@@ -20,6 +20,8 @@ matrix:
       # Travis does not have a Python runtime for MacOS.
       #  https://pythonhosted.org/CodeChat/.travis.yml.html
       language: generic
+      install:
+        - pip2 install .
 install:
   - pip install .
 script:
