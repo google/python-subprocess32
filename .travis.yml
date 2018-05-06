@@ -34,8 +34,15 @@ matrix:
       #  https://pythonhosted.org/CodeChat/.travis.yml.html
       language: generic
       osx_image: xcode7.3
+      before_install:
+        - pkgutil --pkgs | grep -F "org.python.Python.PythonFramework-2.7" || curl -L -o /tmp/Python.pkg https://www.python.org/ftp/python/2.7.15/python-2.7.15-macosx10.6.pkg
+        - sudo installer -pkg /tmp/Python.pkg -target /
+        - which pip2
+        - export PATH="/Library/Frameworks/Python.framework/Versions/2.7/bin:${PATH}"
+        - which pip2
+        - pip2 install --upgrade pip
       install:
-        - pip2 install --upgrade pip && pip2 -v install .
+        - pip2 -v install .
       deploy:
         provider: pypi
         user: "GregoryPSmith"
