@@ -57,4 +57,4 @@ script:
   - python --version
   - python -m unittest discover -v
 after_deploy:
-  - openssl sha256 dist/*
+  - ls -lR
