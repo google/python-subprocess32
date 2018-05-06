@@ -55,5 +55,5 @@ install:
   - pip install .
 script:
   - which python
-  - python -v
+  - python --version
   - python -m unittest discover -v
