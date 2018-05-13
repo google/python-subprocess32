@@ -1,5 +1,5 @@
 -----------------
-2018-05-05 3.5.0rc2
+2018-05-13 3.5.0 (3.5.0rc3)
 -----------------
 
 * Fixed the packaging problem where the stdlib python3_redirect shim is
@@ -7,6 +7,9 @@
 * Renamed _posixsubprocess to _posixsubprocess32 for consistency.
 * Unset CLOEXEC on file descriptors given to Popen pass_fds. (GH #4)
 * Drop support for Python 2.4 and 2.5.
+* Adds a configure script - run by setup.py - to supply the missing feature
+  #define's for the _posixsubprocess32 extension module for the things that
+  Python 2's own configure generated pyconfig.h does not already provide.
 
 -----------------
 2017-10-18 3.5.0rc1
