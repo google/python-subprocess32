@@ -14,7 +14,7 @@ used internally to handle the code path between fork() and exec().
 This module is reliable when an application is using threads.
 
 Refer to the
-[Python 3.3 subprocess documentation](https://docs.python.org/3.3/library/subprocess.html)
+[Python 3.5 subprocess documentation](https://docs.python.org/3.5/library/subprocess.html)
 for usage information.
 
 * Timeout support backported from Python 3.3 is included.
