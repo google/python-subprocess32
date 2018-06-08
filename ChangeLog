@@ -1,5 +1,5 @@
 -----------------
-2018-06-04 3.5.2
+2018-06-07 3.5.2
 -----------------
 * Explicitly include <signal.h> in _posixsubprocess_helpers.c; it already
   gets configure checked and pulled in via Python's own <Python.h> in many
