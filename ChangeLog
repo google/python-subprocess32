@@ -1,9 +1,12 @@
 -----------------
-2018-06-04 3.5.2 (not yet released)
+2018-06-07 3.5.2
 -----------------
 * Explicitly include <signal.h> in _posixsubprocess_helpers.c; it already
-  gets configure checked and pulled in via Python's own <Python.h> but it
-  is better to be explicit.  #IWYU
+  gets configure checked and pulled in via Python's own <Python.h> in many
+  circumstances but it is better to be explicit.  #IWYU
+  If you were using subprocess32 on a Python interpreter built *without*
+  the --with-fpectl configure option enabled, restore_signals is now
+  useful rather than a no-op.  I do not know if such builds were common.
 * Adds a functional test for restore_signals=True behavior.
 
 -----------------
