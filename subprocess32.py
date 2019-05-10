@@ -41,6 +41,7 @@ import sys
 mswindows = (sys.platform == "win32")
 
 import os
+import errno
 import exceptions
 import types
 import time
@@ -132,7 +133,6 @@ if mswindows:
 else:
     import select
     _has_poll = hasattr(select, 'poll')
-    import errno
     import fcntl
     import pickle
 
@@ -682,6 +682,29 @@ class Popen(object):
             self._devnull = os.open(os.devnull, os.O_RDWR)
         return self._devnull
 
+    def _stdin_write(self, input):
+        if input:
+            try:
+                self.stdin.write(input)
+            except EnvironmentError as e:
+                if e.errno == errno.EPIPE:
+                    # communicate() must ignore broken pipe error
+                    pass
+                elif e.errno == errno.EINVAL :
+                    # bpo-19612, bpo-30418: On Windows, stdin.write() fails
+                    # with EINVAL if the child process exited or if the child
+                    # process is still running but closed the pipe.
+                    pass
+                else:
+                    raise
+
+        try:
+            self.stdin.close()
+        except EnvironmentError as e:
+            if e.errno in (errno.EPIPE, errno.EINVAL):
+                pass
+            else:
+                raise
 
     def communicate(self, input=None, timeout=None):
         """Interact with process: Send data to stdin.  Read data from
@@ -708,9 +731,7 @@ class Popen(object):
             stdout = None
             stderr = None
             if self.stdin:
-                if input:
-                    self.stdin.write(input)
-                self.stdin.close()
+                self._stdin_write(input)
             elif self.stdout:
                 stdout = _eintr_retry_call(self.stdout.read)
                 self.stdout.close()
@@ -983,9 +1004,7 @@ class Popen(object):
                 self.stderr_thread.start()
 
             if self.stdin:
-                if input is not None:
-                    self.stdin.write(input)
-                self.stdin.close()
+                self._stdin_write(input)
 
             # Wait for the reader threads, or time out.  If we time out, the
             # threads remain reading and the fds left open in case the user
@@ -1681,11 +1700,19 @@ class Popen(object):
                 if self.stdin in wlist:
                     chunk = self._input[self._input_offset :
                                         self._input_offset + _PIPE_BUF]
-                    bytes_written = os.write(self.stdin.fileno(), chunk)
-                    self._input_offset += bytes_written
-                    if self._input_offset >= len(self._input):
-                        self.stdin.close()
-                        self._write_set.remove(self.stdin)
+                    try:
+                        bytes_written = os.write(self.stdin.fileno(), chunk)
+                    except EnvironmentError as e:
+                        if e.errno == errno.EPIPE:
+                            self._write_set.remove(self.stdin)
+                            self.stdin.close()
+                        else:
+                            raise
+                    else:
+                        self._input_offset += bytes_written
+                        if self._input_offset >= len(self._input):
+                            self.stdin.close()
+                            self._write_set.remove(self.stdin)
 
                 if self.stdout in rlist:
                     data = os.read(self.stdout.fileno(), 1024)
