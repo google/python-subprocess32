@@ -1,5 +1,5 @@
 -----------------
-2019-05-10 3.5.4b1
+2019-05-10 3.5.4rc1
 -----------------
 * GitHub [#61]: Backport the fixes for https://bugs.python.org/issue10963,
   https://bugs.python.org/issue19612, and https://bugs.python.org/issue30418.
