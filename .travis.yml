@@ -38,6 +38,8 @@ matrix:
         - export PATH="/Library/Frameworks/Python.framework/Versions/2.7/bin:${PATH}"
         - which pip2
         - pip2 install --upgrade pip
+        - pip2 install --upgrade twine
+        - which twine
       install:
         - pip2 -v install .
       deploy:
