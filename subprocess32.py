@@ -65,6 +65,8 @@ class CalledProcessError(SubprocessError):
         self.cmd = cmd
         self.output = output
         self.stderr = stderr
+        super(CalledProcessError, self).__init__(returncode, cmd,
+                                                 output, stderr)
 
     def __str__(self):
         if self.returncode and self.returncode < 0:
@@ -100,6 +102,7 @@ class TimeoutExpired(SubprocessError):
         self.timeout = timeout
         self.output = output
         self.stderr = stderr
+        super(TimeoutExpired, self).__init__(cmd, timeout, output, stderr)
 
     def __str__(self):
         return ("Command '%s' timed out after %s seconds" %

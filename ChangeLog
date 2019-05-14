@@ -1,11 +1,18 @@
 -----------------
+2019-05-13 3.5.4rc2
+-----------------
+ * GitHub [#57]: TimeoutExpired and CalledProcessError exceptions can now
+ be unpickled.
+
+-----------------
 2019-05-10 3.5.4rc1
 -----------------
 * GitHub [#61]: Backport the fixes for https://bugs.python.org/issue10963,
   https://bugs.python.org/issue19612, and https://bugs.python.org/issue30418.
   When a child process was so short lived it dies or closes its pipes before
-  you call communicate(), when supplying input or reading its output do not
-  raise an unexpected exception for the broken pipe or interrupted system call.
+  you call communicate().  When supplying stdin or reading its output in
+  this scenario, do not raise an unexpected broken pipe or interrupted
+  system call exception.
 
 -----------------
 2018-10-09 3.5.3

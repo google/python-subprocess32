@@ -27,6 +27,7 @@ try:
     import gc
 except ImportError:
     gc = None
+import pickle
 
 mswindows = (sys.platform == "win32")
 
@@ -2358,6 +2359,28 @@ class HelperFunctionTests(unittest.TestCase):
         # Mostly just to call it for code coverage.
         args_list = subprocess32._args_from_interpreter_flags()
         self.assertTrue(isinstance(args_list, list), msg=repr(args_list))
+
+    def test_timeout_expired_unpickling(self):
+        """https://github.com/google/python-subprocess32/issues/57"""
+        t = subprocess32.TimeoutExpired(['command', 'arg1'], 5,
+                                        output='stdout!', stderr='err')
+        t_pickled = pickle.dumps(t)
+        t2 = pickle.loads(t_pickled)
+        self.assertEqual(t.cmd, t2.cmd)
+        self.assertEqual(t.timeout, t2.timeout)
+        self.assertEqual(t.output, t2.output)
+        self.assertEqual(t.stderr, t2.stderr)
+
+    def test_called_process_error_unpickling(self):
+        """https://github.com/google/python-subprocess32/issues/57"""
+        e = subprocess32.CalledProcessError(
+                2, ['command', 'arg1'], output='stdout!', stderr='err')
+        e_pickled = pickle.dumps(e)
+        e2 = pickle.loads(e_pickled)
+        self.assertEqual(e.returncode, e2.returncode)
+        self.assertEqual(e.cmd, e2.cmd)
+        self.assertEqual(e.output, e2.output)
+        self.assertEqual(e.stderr, e2.stderr)
 
 
 def reap_children():
