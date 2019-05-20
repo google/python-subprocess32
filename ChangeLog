@@ -1,8 +1,13 @@
 -----------------
+2019-05-20 3.5.4
+-----------------
+ * Promoted 3.5.4rc2 to become 3.5.4.
+
+-----------------
 2019-05-13 3.5.4rc2
 -----------------
  * GitHub [#57]: TimeoutExpired and CalledProcessError exceptions can now
- be unpickled.
+   be unpickled.
 
 -----------------
 2019-05-10 3.5.4rc1
