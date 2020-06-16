@@ -44,7 +44,10 @@ Try to reproduce them on the latest Python 3.x itself and file bug
 reports on [bugs.python.org](https://bugs.python.org/).
 Add gregory.p.smith to the Nosy list.
 
-If you have reason to believe the issue is specifically with this backport
-and not a problem in Python 3 itself, use the github issue tracker.
+If you have can prove that the issue is specifically with this backport and not
+a problem in Python 3 itself, feel free to use the github issue tracker for
+others to collaborate with you on a fix, but do not expect any support.
 
--- Gregory P. Smith  _greg@krypto.org_
+Python 2 has reached EOL, as has this project.
+
+-- Gregory P. Smith  _greg@krypto.org_  [Google LLC]
